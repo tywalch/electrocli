@@ -1,0 +1,305 @@
+{{#each instances}}
+{{#eq type "entity"}}
+export declare namespace {{name}} {
+    {{#each attributes}}
+    const symbol_{{name}}: unique symbol;
+    {{/each}}
+
+    {{#each attributes}}
+    interface where_{{name}} {
+        [symbol_{{name}}]: void;
+    }
+    {{/each}}
+
+    type where_Attributes = {{{union (prefix attributeNames "where_")}}}
+
+    type where_AttributeType<T extends where_Attributes> =
+        {{#each attributes}}
+        T extends where_{{name}} ? {{type}} :
+        {{/each}}
+        never;
+    
+    type Operations = {
+        eq: <T extends where_Attributes>(attr: T, value: where_AttributeType<T>) => string,
+        gt: <T extends where_Attributes>(attr: T, value: where_AttributeType<T>) => string,
+        lt: <T extends where_Attributes>(attr: T, value: where_AttributeType<T>) => string,
+        gte: <T extends where_Attributes>(attr: T, value: where_AttributeType<T>) => string,
+        lte: <T extends where_Attributes>(attr: T, value: where_AttributeType<T>) => string,
+        between: <T extends where_Attributes>(attr: T, value: where_AttributeType<T>, value2: where_AttributeType<T>) => string,
+        begins: <T extends where_Attributes>(attr: T, value: where_AttributeType<T>) => string,
+        exists: <T extends where_Attributes>(attr: T) => string,
+        notExists: <T extends where_Attributes>(attr: T) => string,
+        contains: <T extends where_Attributes>(attr: T, value: where_AttributeType<T>) => string,
+        notContains: <T extends where_Attributes>(attr: T, value: where_AttributeType<T>) => string,
+        value: <T extends where_Attributes>(attr: T, value: where_AttributeType<T>) => string,
+        name: <T extends where_Attributes>(attr: T) => string,
+    };
+
+    type WhereAttributes = {
+        {{#each attributes}}
+        {{name}}: where_{{name}};
+        {{/each}}
+    }
+
+    type WhereCallback = (attr: WhereAttributes, op: Operations) => string;
+    
+
+    {{#each enums}}
+    type {{name}} = {{{stringUnion values}}};
+    {{/each}}
+    type TableIndexNames = {{{stringUnion tableIndexFields}}};
+    
+    type Item = {
+    {{#each attributes}}
+        {{name}}{{#if optional}}?{{/if}}: {{type}}
+    {{/each}}
+    }
+    
+    type Attributes = {
+    {{#each attributes}}
+        {{name}}: {{type}}
+    {{/each}}
+    }
+    
+    type RawItem = {
+        {{#each keyNames}}
+        {{this}}: string
+        {{/each}}
+        {{#each attributes}}
+        {{name}}{{#if optional}}?{{/if}}: {{type}}
+        {{/each}}
+    }
+    
+    type config = {
+        raw?: boolean,
+        params?: Object,
+        includeKeys?: boolean,
+        originalErr?: boolean,
+    }
+    
+    type NonReadOnlyProperties = {
+        {{#each attributes}}
+        {{#if readonly}}
+        {{else}}
+        {{name}}{{#if optional}}?{{/if}}: {{type}}
+        {{/if}}
+        {{/each}}
+    }
+    
+    {{#each indexes}}
+    type {{typeName}} = {{{ buildIndexType facets }}}
+    {{#if index}}
+    type {{typeName}}PK = {{{ buildIndexType (filterIndexType facets "pk") }}}
+    type {{typeName}}SK = {{{ buildIndexType (filterIndexType facets "sk") }}}
+    {{/if}}
+    {{/each}}
+    
+    // Figure out better typing for value here
+    type FilterOperations<T> = {
+        gte: (value: T) => string
+        gt: (value: T) => string
+        lte: (value: T) => string
+        lt: (value: T) => string
+        eq: (value: T) => string
+        begins: (value: T) => string
+        exists: () => T
+        notExists: () => T
+        contains: (value: T) => string
+        notContains: (value: T) => string
+        between: (start: T, end: T) => string
+        name: () => T
+        value: (value: T) => string
+    };
+    
+    type FilterAttributes<T extends Attributes> = {
+        [K in keyof T]: FilterOperations<T[K]>
+    }
+    
+    type GoRecord<T> = () => Promise<T>
+    type PageRecord = (page?: {{tableIndexName}} | null) => Promise<[Item | null, Item[]]> 
+    type ParamRecord = () => Object
+    type FilterRecords = (filter: <T extends Attributes>(record: FilterAttributes<T>) => string) => RecordsActionOptions
+    type WhereRecords = (where: WhereCallback) => RecordsActionOptions
+    type RecordsActionOptions = {
+        go: GoRecord<Item[]>
+        params: ParamRecord
+        page: PageRecord
+        filter: FilterRecords
+        where: WhereRecords
+    }
+    
+    type SetRecordActionOptions = {
+        go: GoRecord<Item[]>
+        params: ParamRecord
+        filter: FilterRecords
+        page: PageRecord
+        set: SetRecord
+    }
+    
+    type SetRecord = (properties: Partial<NonReadOnlyProperties>) => SetRecordActionOptions
+    
+    type QueryOperations<T> = {
+        between: (skFacetsStart: T, skFacetsEnd: T) => RecordsActionOptions
+        gt: (skFacets: T) => RecordsActionOptions
+        gte: (skFacets: T) => RecordsActionOptions
+        lt: (skFacets: T) => RecordsActionOptions
+        lte: (skFacets: T) => RecordsActionOptions
+        go: GoRecord<Item[]>
+        params: ParamRecord
+        page: PageRecord
+        filter: FilterRecords
+    }
+    
+    class {{name}}  {
+        get: (key: {{tableIndexName}}) => {go: GoRecord<Item>};
+        delete: (key: {{tableIndexName}}) => {go: GoRecord<Item>};
+        update: (key: {{tableIndexName}}) => {set: SetRecord};
+        patch: (key: {{tableIndexName}}) => {set: SetRecord};
+        put: (record: Item) => {go: GoRecord<Item>};
+        create: (record: Item) => {go: GoRecord<Item>};
+        find: (record: Partial<Item>) => RecordsActionOptions;
+        query: {
+            {{#each indexes}}
+            {{#if index}}
+            {{name}}: (key: {{typeName}}) => QueryOperations<{{typeName}}SK>
+            {{else}}
+            {{name}}: (key: {{typeName}}) => RecordsActionOptions,
+            {{/if}}
+            {{/each}}
+        };
+    }
+}
+{{/eq}}
+{{#eq type "collection"}}
+export declare namespace {{name}} {
+    {{#each attributes}}
+    const symbol_{{name}}: unique symbol;
+    {{/each}}
+
+    {{#each attributes}}
+    interface where_{{name}} {
+        [symbol_{{name}}]: void;
+    }
+    {{/each}}
+
+    type where_Attributes = {{{union (prefix attributeNames "where_")}}}
+
+    type where_AttributeType<T extends where_Attributes> =
+        {{#each attributes}}
+        T extends where_{{name}} ? {{type}} :
+        {{/each}}
+        never;
+    
+    type Operations = {
+        eq: <T extends where_Attributes>(attr: T, value: where_AttributeType<T>) => string,
+        gt: <T extends where_Attributes>(attr: T, value: where_AttributeType<T>) => string,
+        lt: <T extends where_Attributes>(attr: T, value: where_AttributeType<T>) => string,
+        gte: <T extends where_Attributes>(attr: T, value: where_AttributeType<T>) => string,
+        lte: <T extends where_Attributes>(attr: T, value: where_AttributeType<T>) => string,
+        between: <T extends where_Attributes>(attr: T, value: where_AttributeType<T>, value2: where_AttributeType<T>) => string,
+        begins: <T extends where_Attributes>(attr: T, value: where_AttributeType<T>) => string,
+        exists: <T extends where_Attributes>(attr: T) => string,
+        notExists: <T extends where_Attributes>(attr: T) => string,
+        contains: <T extends where_Attributes>(attr: T, value: where_AttributeType<T>) => string,
+        notContains: <T extends where_Attributes>(attr: T, value: where_AttributeType<T>) => string,
+        value: <T extends where_Attributes>(attr: T, value: where_AttributeType<T>) => string,
+        name: <T extends where_Attributes>(attr: T) => string,
+    };
+
+    type WhereAttributes = {
+        {{#each attributes}}
+        {{name}}: where_{{name}};
+        {{/each}}
+    }
+
+    type WhereCallback = (attr: WhereAttributes, op: Operations) => string;
+
+    {{#each enums}}
+    type {{name}} = {{{stringUnion values}}};
+    {{/each}}
+    
+    type IndexFacets = {{{ buildIndexType facets }}}
+    
+    type Attributes = {
+    {{#each attributes}}
+        {{name}}{{#if optional}}?{{/if}}: {{type}}
+    {{/each}}
+    }
+    
+    {{#each item}}
+    type {{@key}}_item = {
+        {{#each this}}
+        {{name}}{{#if optional}}?{{/if}}: {{type}}
+        {{/each}}
+    }
+    
+    {{/each}}
+    
+    type Item = {
+    {{#each item}}
+        {{@key}}: {{@key}}_item[]
+    {{/each}}
+    }
+    
+    // Figure out better typing for value here
+    type FilterOperations<T> = {
+        gte: (value: T) => string
+        gt: (value: T) => string
+        lte: (value: T) => string
+        lt: (value: T) => string
+        eq: (value: T) => string
+        begins: (value: T) => string
+        exists: () => T
+        notExists: () => T
+        contains: (value: T) => string
+        notContains: (value: T) => string
+        between: (start: T, end: T) => string
+        name: () => T
+        value: (value: T) => string
+    };
+    
+    type FilterAttributes<T extends Attributes> = {
+        [K in keyof T]: FilterOperations<T[K]>
+    }
+    
+    type GoRecord<T> = () => Promise<T>
+    type PageRecord = (page?: Attributes | null) => Promise<[Attributes | null, Item[]]> 
+    type ParamRecord = () => Object
+    type FilterRecords = (filter: <T extends Attributes>(record: FilterAttributes<T>) => string) => RecordsActionOptions
+    type WhereRecords = (where: WhereCallback) => RecordsActionOptions
+    type RecordsActionOptions = {
+        go: GoRecord<Item[]>
+        params: ParamRecord
+        page: PageRecord
+        filter: FilterRecords
+        where: WhereRecords
+    }
+    
+    type {{name}} = (key: IndexFacets) => RecordsActionOptions
+}
+{{/eq}}
+{{/each}}
+
+{{#if isService}}
+declare class {{export}} {
+    entities: {
+        {{#each instances}}
+        {{#eq type "entity"}}
+        {{name}}: {{name}}.{{name}}, 
+        {{/eq}}
+        {{/each}}
+    };
+    collections: {
+        {{#each instances}}
+        {{#eq type "collection"}}
+        {{name}}: {{name}}.{{name}}
+        {{/eq}}
+        {{/each}}
+    };
+}
+
+declare const _default: {{export}};
+{{else}}
+declare const _default: {{export}}.{{export}};
+{{/if}}
+export default _default;

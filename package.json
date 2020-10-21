@@ -1,0 +1,21 @@
+{
+  "name": "electrocli",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/commander": "^2.12.2",
+    "@types/handlebars": "^4.1.0",
+    "@types/node": "^14.14.0"
+  },
+  "dependencies": {
+    "commander": "^6.1.0",
+    "electrodb": "^0.9.19",
+    "handlebars": "^4.7.6"
+  }
+}

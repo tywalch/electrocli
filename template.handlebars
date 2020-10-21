@@ -1,6 +1,6 @@
 {{#each instances}}
 {{#eq type "entity"}}
-export declare namespace {{name}} {
+export declare namespace entity_{{name}} {
     {{#each attributes}}
     const symbol_{{name}}: unique symbol;
     {{/each}}
@@ -49,19 +49,19 @@ export declare namespace {{name}} {
     {{/each}}
     type TableIndexNames = {{{stringUnion tableIndexFields}}};
     
-    type Item = {
+    export type Item = {
     {{#each attributes}}
         {{name}}{{#if optional}}?{{/if}}: {{type}}
     {{/each}}
     }
     
-    type Attributes = {
+    export type Attributes = {
     {{#each attributes}}
         {{name}}: {{type}}
     {{/each}}
     }
     
-    type RawItem = {
+    export type RawItem = {
         {{#each keyNames}}
         {{this}}: string
         {{/each}}
@@ -148,6 +148,7 @@ export declare namespace {{name}} {
         params: ParamRecord
         page: PageRecord
         filter: FilterRecords
+        where: WhereRecords
     }
     
     class {{name}}  {
@@ -171,7 +172,7 @@ export declare namespace {{name}} {
 }
 {{/eq}}
 {{#eq type "collection"}}
-export declare namespace {{name}} {
+export declare namespace collection_{{name}} {
     {{#each attributes}}
     const symbol_{{name}}: unique symbol;
     {{/each}}
@@ -235,7 +236,7 @@ export declare namespace {{name}} {
     
     {{/each}}
     
-    type Item = {
+    export type Item = {
     {{#each item}}
         {{@key}}: {{@key}}_item[]
     {{/each}}
@@ -281,25 +282,25 @@ export declare namespace {{name}} {
 {{/each}}
 
 {{#if isService}}
-declare class {{export}} {
+export declare class service_{{export}} {
     entities: {
         {{#each instances}}
         {{#eq type "entity"}}
-        {{name}}: {{name}}.{{name}}, 
+        {{name}}: entity_{{name}}.{{name}}, 
         {{/eq}}
         {{/each}}
     };
     collections: {
         {{#each instances}}
         {{#eq type "collection"}}
-        {{name}}: {{name}}.{{name}}
+        {{name}}: collection_{{name}}.{{name}}
         {{/eq}}
         {{/each}}
     };
 }
 
-declare const _default: {{export}};
+declare const _default: service_{{export}};
 {{else}}
-declare const _default: {{export}}.{{export}};
+declare const _default: entity_{{export}}.{{export}};
 {{/if}}
 export default _default;

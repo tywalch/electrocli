@@ -296,6 +296,6 @@ export class ElectroInstance {
     let [name, instances] = ElectroInstance.parse(electro);
     this.name = name;
     this.instances = instances;
-    this.isService = !!instances.find(instance => instance.type === "collection");
+    this.isService = isService(electro);
   }
 }

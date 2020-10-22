@@ -1,5 +1,6 @@
 import Templater from "./templater";
-import {InstanceReader, RemoteFile} from "./files";
+import {RemoteFile} from "./files";
+import {InstanceReader} from "./instance";
 import path from "path";
 
 const TEMPLATE_FILE = "../../templates/template.handlebars";

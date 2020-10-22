@@ -1,3 +1,5 @@
+import {RemoteFile} from "./files";
+
 export type IndexTypes = 'pk' | 'sk'
 
 export type Attribute = {
@@ -310,5 +312,37 @@ export class ElectroInstance {
     this.name = name;
     this.instances = instances;
     this.isService = isService(electro);
+  }
+}
+
+export class InstanceReader {
+  public filePath: string;
+
+  constructor(filePath: string) {
+    this.filePath = InstanceReader.resolve(filePath);
+  }
+
+  static AllowedFileTypes = [".js", ".json"];
+
+  static resolve(filePath: string): string {
+    let file = new RemoteFile(filePath);
+    if (!file.test()) {
+        throw new Error(`File ${file.path()} does not exist.`);
+    } else if (!InstanceReader.AllowedFileTypes.includes(file.extention())) {
+        throw new Error(`Only files of type "${InstanceReader.AllowedFileTypes.join(", ")}", are allowed. File also must export instance of Entity, Service, or Model`);
+    } else {
+      return file.path();
+    }
+  }
+
+  get(): ElectroInstanceType {
+    let instance = require(this.filePath);
+    if (instance && instance._instance) {
+        return instance;
+    } else if (false) {
+      // placeholder for importing model;
+    } else {
+      throw new Error("File must instance of Entity, Service, or Model.");
+    }
   }
 }

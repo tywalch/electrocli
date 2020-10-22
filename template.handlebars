@@ -4,12 +4,14 @@ export declare namespace {{name}}Entity {
     namespace WhereClause {
         {{#each attributes}}
         const {{name}}Symbol: unique symbol;
+
         {{/each}}
 
         {{#each attributes}}
         interface {{name}} {
             [{{name}}Symbol]: void;
         }
+
         {{/each}}
 
         type AttributeName = {{{union attributeNames}}}
@@ -47,6 +49,7 @@ export declare namespace {{name}}Entity {
 
     {{#each enums}}
     type {{name}} = {{{stringUnion values}}};
+
     {{/each}}
     type TableIndexNames = {{{stringUnion tableIndexFields}}};
     
@@ -89,9 +92,12 @@ export declare namespace {{name}}Entity {
     
     {{#each indexes}}
     type {{typeName}} = {{{ buildIndexType facets }}}
+
     {{#if index}}
     type {{typeName}}PK = {{{ buildIndexType (filterIndexType facets "pk") }}}
+
     type {{typeName}}SK = {{{ buildIndexType (filterIndexType facets "sk") }}}
+
     {{/if}}
     {{/each}}
     
@@ -117,10 +123,15 @@ export declare namespace {{name}}Entity {
     }
     
     type GoRecord<T> = () => Promise<T>
+
     type PageRecord = (page?: {{tableIndexName}} | null) => Promise<[Item | null, Item[]]> 
+
     type ParamRecord = () => Object
+
     type FilterRecords = (filter: <T extends Attributes>(record: FilterAttributes<T>) => string) => RecordsActionOptions
+
     type WhereRecords = (where: WhereClause.Callback) => RecordsActionOptions
+
     type RecordsActionOptions = {
         go: GoRecord<Item[]>
         params: ParamRecord
@@ -181,12 +192,14 @@ export declare namespace {{name}}Collection {
     namespace WhereClause {
         {{#each attributes}}
         const {{name}}Symbol: unique symbol;
+
         {{/each}}
 
         {{#each attributes}}
         interface {{name}} {
             [{{name}}Symbol]: void;
         }
+
         {{/each}}
 
         type AttributesName = {{{union attributeNames}}}
@@ -224,6 +237,7 @@ export declare namespace {{name}}Collection {
 
     {{#each enums}}
     type {{name}} = {{{stringUnion values}}};
+
     {{/each}}
     
     type IndexFacets = {{{ buildIndexType facets }}}
@@ -271,10 +285,15 @@ export declare namespace {{name}}Collection {
     }
     
     type GoRecord<T> = () => Promise<T>
+
     type PageRecord = (page?: Attributes | null) => Promise<[Attributes | null, Item[]]> 
+
     type ParamRecord = () => Object
+
     type FilterRecords = (filter: <T extends Attributes>(record: FilterAttributes<T>) => string) => RecordsActionOptions
+
     type WhereRecords = (where: WhereClause.Callback) => RecordsActionOptions
+
     type RecordsActionOptions = {
         go: GoRecord<Item[]>
         params: ParamRecord
@@ -286,8 +305,8 @@ export declare namespace {{name}}Collection {
     type {{name}} = (key: IndexFacets) => RecordsActionOptions
 }
 {{/eq}}
-{{/each}}
 
+{{/each}}
 {{#if isService}}
 export declare class Instance {
     service: {
@@ -311,8 +330,11 @@ export declare class Instance {
 }
 
 declare const _default: Instance;
+
 {{else}}
 export type Instance = {{export}}Entity.{{export}}
+
 declare const _default: Instance;
+
 {{/if}}
 export default _default;

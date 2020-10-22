@@ -1,5 +1,7 @@
+#!/usr/bin/env node
+
 import commander from "commander";
-import generate from "./generate";
+import generate from "../src/generate";
 
 commander
   .command("typedef <filepath>")

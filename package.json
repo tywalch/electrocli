@@ -1,19 +1,29 @@
 {
   "name": "electrocli",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "",
-  "main": "dist/src/index.js",
-  "types": "dist/src/index.d.ts",
+  "main": "dist/bin/index.js",
+  "types": "dist/bin/index.d.ts",
+  "preferGlobal": true,
+  "bin": {
+    "electro": "dist/bin/index.js"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "",
+  "author": "Tyler W. Walch",
   "license": "ISC",
   "devDependencies": {
     "@types/commander": "^2.12.2",
     "@types/handlebars": "^4.1.0",
     "@types/node": "^14.14.0"
   },
+  "keywords": [
+    "electrodb",
+    "dynamo",
+    "dynamodb",
+    "aws"
+  ],
   "dependencies": {
     "commander": "^6.1.0",
     "electrodb": "^0.9.19",

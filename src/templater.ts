@@ -40,6 +40,7 @@ type TemplateDataInstance = {
   tableIndexFields: string[];
   indexes: IndexDetail[];
   attributeNames: string[]
+  staticProperties: {name: string, value: string}[]
 }
 
 type TemplateData = {
@@ -58,14 +59,14 @@ export default class InstanceTemplater extends ElectroInstance {
 
   private formatAttributeType(name: string, type: string): string { 
     if (type === "enum") {
-      return `${name}_enum`;
+      return `${name}Enum`;
     } else {
       return type;
     }
   }
 
   private formatAccessPatternName(name: string): string {
-    return `${name}_index`;
+    return `${name}Index`;
   }
 
   private formatAttributes(attributes: Record<string, Attribute>): AttributeDetail[] {
@@ -145,7 +146,8 @@ export default class InstanceTemplater extends ElectroInstance {
         tableIndexName: this.formatAccessPatternName(instance.getAccessPatternName()),
         tableIndexFields: instance.getKeyFieldNames(),
         indexes: this.formatIndexes(instance),
-        attributeNames: Object.keys(attributes)
+        attributeNames: Object.keys(attributes),
+        staticProperties: instance.getStaticProperties()
       })
     }
     return this.template(templateData, templateFileName);

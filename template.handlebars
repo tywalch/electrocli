@@ -1,48 +1,49 @@
 {{#each instances}}
 {{#eq type "entity"}}
-export declare namespace entity_{{name}} {
-    {{#each attributes}}
-    const symbol_{{name}}: unique symbol;
-    {{/each}}
-
-    {{#each attributes}}
-    interface where_{{name}} {
-        [symbol_{{name}}]: void;
-    }
-    {{/each}}
-
-    type where_Attributes = {{{union (prefix attributeNames "where_")}}}
-
-    type where_AttributeType<T extends where_Attributes> =
+export declare namespace {{name}}Entity {
+    namespace WhereClause {
         {{#each attributes}}
-        T extends where_{{name}} ? {{type}} :
+        const {{name}}Symbol: unique symbol;
         {{/each}}
-        never;
-    
-    type Operations = {
-        eq: <T extends where_Attributes>(attr: T, value: where_AttributeType<T>) => string,
-        gt: <T extends where_Attributes>(attr: T, value: where_AttributeType<T>) => string,
-        lt: <T extends where_Attributes>(attr: T, value: where_AttributeType<T>) => string,
-        gte: <T extends where_Attributes>(attr: T, value: where_AttributeType<T>) => string,
-        lte: <T extends where_Attributes>(attr: T, value: where_AttributeType<T>) => string,
-        between: <T extends where_Attributes>(attr: T, value: where_AttributeType<T>, value2: where_AttributeType<T>) => string,
-        begins: <T extends where_Attributes>(attr: T, value: where_AttributeType<T>) => string,
-        exists: <T extends where_Attributes>(attr: T) => string,
-        notExists: <T extends where_Attributes>(attr: T) => string,
-        contains: <T extends where_Attributes>(attr: T, value: where_AttributeType<T>) => string,
-        notContains: <T extends where_Attributes>(attr: T, value: where_AttributeType<T>) => string,
-        value: <T extends where_Attributes>(attr: T, value: where_AttributeType<T>) => string,
-        name: <T extends where_Attributes>(attr: T) => string,
-    };
 
-    type WhereAttributes = {
         {{#each attributes}}
-        {{name}}: where_{{name}};
+        interface {{name}} {
+            [{{name}}Symbol]: void;
+        }
         {{/each}}
-    }
 
-    type WhereCallback = (attr: WhereAttributes, op: Operations) => string;
-    
+        type AttributeName = {{{union attributeNames}}}
+
+        type AttributeType<T extends AttributeName> =
+            {{#each attributes}}
+            T extends {{name}} ? {{type}} :
+            {{/each}}
+            never;
+        
+        type Operations = {
+            eq: <T extends AttributeName>(attr: T, value: AttributeType<T>) => string,
+            gt: <T extends AttributeName>(attr: T, value: AttributeType<T>) => string,
+            lt: <T extends AttributeName>(attr: T, value: AttributeType<T>) => string,
+            gte: <T extends AttributeName>(attr: T, value: AttributeType<T>) => string,
+            lte: <T extends AttributeName>(attr: T, value: AttributeType<T>) => string,
+            between: <T extends AttributeName>(attr: T, value: AttributeType<T>, value2: AttributeType<T>) => string,
+            begins: <T extends AttributeName>(attr: T, value: AttributeType<T>) => string,
+            exists: <T extends AttributeName>(attr: T) => string,
+            notExists: <T extends AttributeName>(attr: T) => string,
+            contains: <T extends AttributeName>(attr: T, value: AttributeType<T>) => string,
+            notContains: <T extends AttributeName>(attr: T, value: AttributeType<T>) => string,
+            value: <T extends AttributeName>(attr: T, value: AttributeType<T>) => string,
+            name: <T extends AttributeName>(attr: T) => string,
+        };
+
+        type Attributes = {
+            {{#each attributes}}
+            {{name}}: {{name}};
+            {{/each}}
+        }
+
+        type Callback = (attr: Attributes, op: Operations) => string;
+    }
 
     {{#each enums}}
     type {{name}} = {{{stringUnion values}}};
@@ -119,7 +120,7 @@ export declare namespace entity_{{name}} {
     type PageRecord = (page?: {{tableIndexName}} | null) => Promise<[Item | null, Item[]]> 
     type ParamRecord = () => Object
     type FilterRecords = (filter: <T extends Attributes>(record: FilterAttributes<T>) => string) => RecordsActionOptions
-    type WhereRecords = (where: WhereCallback) => RecordsActionOptions
+    type WhereRecords = (where: WhereClause.Callback) => RecordsActionOptions
     type RecordsActionOptions = {
         go: GoRecord<Item[]>
         params: ParamRecord
@@ -152,7 +153,7 @@ export declare namespace entity_{{name}} {
         where: WhereRecords
     }
     
-    class {{name}}  {
+    class {{name}} {
         get: (key: {{tableIndexName}}) => {go: GoRecord<Item>};
         delete: (key: {{tableIndexName}}) => {go: GoRecord<Item>};
         update: (key: {{tableIndexName}}) => {set: SetRecord};
@@ -169,52 +170,57 @@ export declare namespace entity_{{name}} {
             {{/if}}
             {{/each}}
         };
+        {{#each staticProperties}}
+        {{name}}: {{{value}}};
+        {{/each}}
     }
 }
 {{/eq}}
 {{#eq type "collection"}}
-export declare namespace collection_{{name}} {
-    {{#each attributes}}
-    const symbol_{{name}}: unique symbol;
-    {{/each}}
-
-    {{#each attributes}}
-    interface where_{{name}} {
-        [symbol_{{name}}]: void;
-    }
-    {{/each}}
-
-    type where_Attributes = {{{union (prefix attributeNames "where_")}}}
-
-    type where_AttributeType<T extends where_Attributes> =
+export declare namespace {{name}}Collection {
+    namespace WhereClause {
         {{#each attributes}}
-        T extends where_{{name}} ? {{type}} :
+        const {{name}}Symbol: unique symbol;
         {{/each}}
-        never;
-    
-    type Operations = {
-        eq: <T extends where_Attributes>(attr: T, value: where_AttributeType<T>) => string,
-        gt: <T extends where_Attributes>(attr: T, value: where_AttributeType<T>) => string,
-        lt: <T extends where_Attributes>(attr: T, value: where_AttributeType<T>) => string,
-        gte: <T extends where_Attributes>(attr: T, value: where_AttributeType<T>) => string,
-        lte: <T extends where_Attributes>(attr: T, value: where_AttributeType<T>) => string,
-        between: <T extends where_Attributes>(attr: T, value: where_AttributeType<T>, value2: where_AttributeType<T>) => string,
-        begins: <T extends where_Attributes>(attr: T, value: where_AttributeType<T>) => string,
-        exists: <T extends where_Attributes>(attr: T) => string,
-        notExists: <T extends where_Attributes>(attr: T) => string,
-        contains: <T extends where_Attributes>(attr: T, value: where_AttributeType<T>) => string,
-        notContains: <T extends where_Attributes>(attr: T, value: where_AttributeType<T>) => string,
-        value: <T extends where_Attributes>(attr: T, value: where_AttributeType<T>) => string,
-        name: <T extends where_Attributes>(attr: T) => string,
-    };
 
-    type WhereAttributes = {
         {{#each attributes}}
-        {{name}}: where_{{name}};
+        interface {{name}} {
+            [{{name}}Symbol]: void;
+        }
         {{/each}}
-    }
 
-    type WhereCallback = (attr: WhereAttributes, op: Operations) => string;
+        type AttributesName = {{{union attributeNames}}}
+
+        type AttributeType<T extends AttributesName> =
+            {{#each attributes}}
+            T extends {{name}} ? {{type}} :
+            {{/each}}
+            never;
+        
+        type Operations = {
+            eq: <T extends AttributesName>(attr: T, value: AttributeType<T>) => string,
+            gt: <T extends AttributesName>(attr: T, value: AttributeType<T>) => string,
+            lt: <T extends AttributesName>(attr: T, value: AttributeType<T>) => string,
+            gte: <T extends AttributesName>(attr: T, value: AttributeType<T>) => string,
+            lte: <T extends AttributesName>(attr: T, value: AttributeType<T>) => string,
+            between: <T extends AttributesName>(attr: T, value: AttributeType<T>, value2: AttributeType<T>) => string,
+            begins: <T extends AttributesName>(attr: T, value: AttributeType<T>) => string,
+            exists: <T extends AttributesName>(attr: T) => string,
+            notExists: <T extends AttributesName>(attr: T) => string,
+            contains: <T extends AttributesName>(attr: T, value: AttributeType<T>) => string,
+            notContains: <T extends AttributesName>(attr: T, value: AttributeType<T>) => string,
+            value: <T extends AttributesName>(attr: T, value: AttributeType<T>) => string,
+            name: <T extends AttributesName>(attr: T) => string,
+        };
+
+        type Attributes = {
+            {{#each attributes}}
+            {{name}}: {{name}};
+            {{/each}}
+        }
+
+        type Callback = (attr: Attributes, op: Operations) => string;
+    }
 
     {{#each enums}}
     type {{name}} = {{{stringUnion values}}};
@@ -229,7 +235,7 @@ export declare namespace collection_{{name}} {
     }
     
     {{#each item}}
-    type {{@key}}_item = {
+    type {{@key}}Item = {
         {{#each this}}
         {{name}}{{#if optional}}?{{/if}}: {{type}}
         {{/each}}
@@ -239,7 +245,7 @@ export declare namespace collection_{{name}} {
     
     export type Item = {
     {{#each item}}
-        {{@key}}: {{@key}}_item[]
+        {{@key}}: {{@key}}Item[]
     {{/each}}
     }
     
@@ -268,7 +274,7 @@ export declare namespace collection_{{name}} {
     type PageRecord = (page?: Attributes | null) => Promise<[Attributes | null, Item[]]> 
     type ParamRecord = () => Object
     type FilterRecords = (filter: <T extends Attributes>(record: FilterAttributes<T>) => string) => RecordsActionOptions
-    type WhereRecords = (where: WhereCallback) => RecordsActionOptions
+    type WhereRecords = (where: WhereClause.Callback) => RecordsActionOptions
     type RecordsActionOptions = {
         go: GoRecord<Item[]>
         params: ParamRecord
@@ -283,26 +289,30 @@ export declare namespace collection_{{name}} {
 {{/each}}
 
 {{#if isService}}
-export declare class Database {
+export declare class Instance {
+    service: {
+        name: string;
+        table: string;
+    };
     entities: {
         {{#each instances}}
         {{#eq type "entity"}}
-        {{name}}: entity_{{name}}.{{name}}, 
+        {{name}}: {{name}}Entity.{{name}}, 
         {{/eq}}
         {{/each}}
     };
     collections: {
         {{#each instances}}
         {{#eq type "collection"}}
-        {{name}}: collection_{{name}}.{{name}}
+        {{name}}: {{name}}Collection.{{name}}
         {{/eq}}
         {{/each}}
     };
 }
 
-declare const _default: Database;
+declare const _default: Instance;
 {{else}}
-export type Database = entity_{{export}}.{{export}}
-declare const _default: Database;
+export type Instance = {{export}}Entity.{{export}}
+declare const _default: Instance;
 {{/if}}
 export default _default;

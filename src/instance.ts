@@ -31,6 +31,7 @@ export type ElectroInstanceType = Service | Entity;
 
 export type Entity = {
   _instance: {description: "entity"} // really a `symbol` but typescript doesnt understand
+  modelAttributeIdentifier: string;
   model: {
     entity: string
     facets: {
@@ -78,6 +79,7 @@ export abstract class Instance {
   abstract getAttributes(): Record<string, Attribute>;
   abstract getFacets(name?: string): Facet[];
   abstract getIndexes(): Index[]
+  abstract getStaticProperties(): {name: string, value: string}[];
 
   constructor(name: string, type: InstanceAccessType) {
     this.name = name;
@@ -110,7 +112,7 @@ export abstract class Instance {
   getAttributeTypeName(attribute: string): string {
     let attr = this.getAttribute(attribute);
     if (attr.type === "enum") {
-        return `${attribute}_enum`;
+        return `${attribute}Enum`;
     }
     return attr.type;
   }
@@ -159,6 +161,13 @@ export class EntityInstance extends Instance {
     this.instance = instance;
   }
 
+  getStaticProperties(): {name: string, value: string}[] {
+    return [
+      {name: "model", value: JSON.stringify(this.instance.model)},
+      {name: "modelAttributeIdentifier", value: JSON.stringify(this.instance.modelAttributeIdentifier)}
+    ]
+  }
+
   getAccessPatternName(index: string = ""): string {
     return this.instance.model.translations.indexes.fromIndexToAccessPattern[index];
   }
@@ -198,6 +207,10 @@ export class CollectionInstance extends Instance {
   constructor(name: string, instance: CollectionSchema) {
     super(name, "collection");
     this.instance = instance;
+  }
+
+  getStaticProperties(): {name: string, value: string}[] {
+    return []
   }
 
   getAccessPatternName(): string {

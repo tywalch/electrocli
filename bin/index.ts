@@ -22,11 +22,13 @@ commander
 
 commander
   .command("remove <service>")
+  .alias("rm <service>")
   .description("Specify a file that exports an ElectroDB Service or Entity and Electo will add that Instance to the cli")
   .action((service: string) => cli.removeService(service));
 
 commander
   .command("list")
+  .alias("ls")
   .description("List all ElectroDB instances that have been imported into the Electro cli")
   .action(() => cli.list());
 

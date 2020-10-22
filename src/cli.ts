@@ -32,7 +32,3 @@ export function list() {
 export function loadServices(program: commander.Command) {
   
 }
-
-async function getServiceConfig(filePath: string) {
-
-}

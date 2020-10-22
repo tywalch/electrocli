@@ -107,3 +107,5 @@ dist
 dist/
 *.js.map
 *.js
+
+.electro_config

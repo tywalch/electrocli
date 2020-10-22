@@ -283,7 +283,7 @@ export declare namespace collection_{{name}} {
 {{/each}}
 
 {{#if isService}}
-export declare class service_{{export}} {
+export declare class Database {
     entities: {
         {{#each instances}}
         {{#eq type "entity"}}
@@ -300,8 +300,9 @@ export declare class service_{{export}} {
     };
 }
 
-declare const _default: service_{{export}};
+declare const _default: Database;
 {{else}}
-declare const _default: entity_{{export}}.{{export}};
+export type Database = entity_{{export}}.{{export}}
+declare const _default: Database;
 {{/if}}
 export default _default;

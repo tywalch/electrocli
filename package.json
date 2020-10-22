@@ -25,6 +25,8 @@
     "aws"
   ],
   "dependencies": {
+    "@types/cli-table": "^0.3.0",
+    "cli-table": "^0.3.1",
     "commander": "^6.1.0",
     "electrodb": "^0.9.19",
     "handlebars": "^4.7.6"

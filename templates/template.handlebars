@@ -6,14 +6,12 @@ export declare namespace {{name}}Entity {
         const {{name}}Symbol: unique symbol;
 
         {{/each}}
-
         {{#each attributes}}
         interface {{name}} {
             [{{name}}Symbol]: void;
         }
 
         {{/each}}
-
         type AttributeName = {{{union attributeNames}}}
 
         type AttributeType<T extends AttributeName> =
@@ -100,7 +98,6 @@ export declare namespace {{name}}Entity {
 
     {{/if}}
     {{/each}}
-    
     // Figure out better typing for value here
     type FilterOperations<T> = {
         gte: (value: T) => string
@@ -194,14 +191,12 @@ export declare namespace {{name}}Collection {
         const {{name}}Symbol: unique symbol;
 
         {{/each}}
-
         {{#each attributes}}
         interface {{name}} {
             [{{name}}Symbol]: void;
         }
 
         {{/each}}
-
         type AttributesName = {{{union attributeNames}}}
 
         type AttributeType<T extends AttributesName> =
@@ -239,7 +234,6 @@ export declare namespace {{name}}Collection {
     type {{name}} = {{{stringUnion values}}};
 
     {{/each}}
-    
     type IndexFacets = {{{ buildIndexType facets }}}
     
     type Attributes = {
@@ -256,7 +250,6 @@ export declare namespace {{name}}Collection {
     }
     
     {{/each}}
-    
     export type Item = {
     {{#each item}}
         {{@key}}: {{@key}}Item[]

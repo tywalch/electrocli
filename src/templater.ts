@@ -1,6 +1,7 @@
 import Handlebars from "./handlebars";
 import fs from "fs";
 import {ElectroInstance, ElectroInstanceType, IndexTypes, InstanceAccessType, Instance, Facet, Attribute} from "./instance";
+import {LocalFile} from "./files";
 
 type AttributeDetail = {
   type: string;
@@ -54,6 +55,7 @@ export default class InstanceTemplater extends ElectroInstance {
   
   constructor(electro: ElectroInstanceType) {
     super(electro);
+
     this.handlebars = Handlebars;
   }
 
@@ -120,13 +122,15 @@ export default class InstanceTemplater extends ElectroInstance {
     })
   }
 
-  private template(data: TemplateData, templateFileName: string): string {
-    let templateFile = fs.readFileSync(templateFileName, "utf8");
-    let templater = this.handlebars.compile(templateFile);
+  private template(data: TemplateData, template: string): string {
+    // let file = fs.readFileSync(templateFileName, "utf8");
+    let templater = this.handlebars.compile(template);
     return templater(data);
   }
 
-  compile(templateFileName: string): string {
+  compile(filePath: string): string {
+    let file = new LocalFile<string>(filePath);
+    file.test();
     let templateData: TemplateData = {
       isService: this.isService,
       export: this.name,
@@ -150,17 +154,17 @@ export default class InstanceTemplater extends ElectroInstance {
         staticProperties: instance.getStaticProperties()
       })
     }
-    return this.template(templateData, templateFileName);
+    return this.template(templateData, file.read());
   }
 
-  async write(fileName: string, contents: string): Promise<void> {
-    return new Promise((resolve, reject) => {
-      fs.writeFile(fileName, contents, {encoding: 'utf8', flag: 'w'}, (err) => {
-          if (err) {
-            return reject(err);
-          }
-          resolve();
-      });
-    });
-  }
+  // async write(fileName: string, contents: string): Promise<void> {
+  //   return new Promise((resolve, reject) => {
+  //     fs.writeFile(fileName, contents, {encoding: 'utf8', flag: 'w'}, (err) => {
+  //         if (err) {
+  //           return reject(err);
+  //         }
+  //         resolve();
+  //     });
+  //   });
+  // }
 }

@@ -1,5 +1,5 @@
 import commander from "commander";
-import generate from "./src/generate";
+import generate from "./generate";
 
 commander
   .command("typedef <filepath>")

@@ -3,7 +3,7 @@ import fs from "fs";
 import path from "path";
 
 const ALLOWED_FILES_TYPES = [".js"];
-const TEMPLATE_FILE = path.resolve(__dirname, "../../template.handlebars");
+const TEMPLATE_FILE = path.resolve(__dirname, "../templates/template.handlebars");
 
 function getInstance(fileName: string) {
   let instance = require(fileName);

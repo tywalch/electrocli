@@ -19,6 +19,7 @@ export default function generate(inFile: string, outFile: string = "") {
     outFile = outFile || modifyExtension(reader.filePath, "d.ts");
     let writer = new RemoteFile(outFile);
     writer.write(compiled);
+    return outFile;
   } catch(err) {
     console.log(err);
     console.error("Error:", err.message);

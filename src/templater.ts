@@ -1,6 +1,6 @@
 import Handlebars from "./handlebars";
 import fs from "fs";
-import {ElectroInstance, ElectroInstanceType, IndexTypes, InstanceAccessType, Instance, Facet, Attribute} from "./instance";
+import {ElectroInstance, ElectroInstances, IndexTypes, InstanceAccessType, Instance, Facet, Attribute} from "./instance";
 import {LocalFile} from "./files";
 
 type AttributeDetail = {
@@ -53,7 +53,7 @@ type TemplateData = {
 export default class InstanceTemplater extends ElectroInstance {
   private handlebars = Handlebars;
   
-  constructor(electro: ElectroInstanceType) {
+  constructor(electro: ElectroInstances) {
     super(electro);
 
     this.handlebars = Handlebars;

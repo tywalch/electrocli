@@ -28,14 +28,20 @@ type IndexFacet = {
 }
 
 export type InstanceAccessType = "entity" | "collection";
-
-export type ElectroInstanceType = Service | Entity;
+export type ElectroInstanceType = "service" | "entity";
+export type ElectroInstances = Service | Entity;
 
 export type Entity = {
   _instance: {description: "entity"} // really a `symbol` but typescript doesnt understand
   modelAttributeIdentifier: string;
+  query: Record<string, QueryMethod>,
+  get(val: any): any
+  delete: QueryMethod
+  scan: QueryOperation,
+  find: any
   model: {
     entity: string
+    service: string
     facets: {
       byIndex: Record<string, IndexFacet>
       fields: string[]
@@ -61,6 +67,8 @@ export type Service = {
     table: string;
   }
   collectionSchema: Record<string, CollectionSchema>
+  collections: Record<string, QueryMethod>
+  find: Record<string, any>
 }
 
 type CollectionSchema = {
@@ -69,8 +77,11 @@ type CollectionSchema = {
   keys: Index & {name: string}
 }
 
+export type FilterOperation = (typeof Instance.FilterOperations)[number];
+
 export abstract class Instance {
   public name: string;
+  public service: string;
   public type: InstanceAccessType;
   private __hasSK: boolean|undefined;
   abstract getItem(): Object;
@@ -82,10 +93,16 @@ export abstract class Instance {
   abstract getFacets(name?: string): Facet[];
   abstract getIndexes(): Index[]
   abstract getStaticProperties(): {name: string, value: string}[];
+  abstract hasAccessPattern(accessPattern: string): boolean;
+  static readonly FilterOperations = ["eq","gt","lt","gte","lte","between","begins","exists","notExists","contains","notContains"];
+  static isOperation(operation: string = ""): operation is FilterOperation {
+    return !!Instance.FilterOperations.find(op => op.toLowerCase() === operation.toLowerCase());
+  }
 
-  constructor(name: string, type: InstanceAccessType) {
+  constructor(name: string, service: string, type: InstanceAccessType) {
     this.name = name;
     this.type = type;
+    this.service = service;
   }
 
   getIndexTypeName(accessPattern: string): string {
@@ -154,13 +171,17 @@ export abstract class Instance {
 }
 
 export class EntityInstance extends Instance {
-  private instance: Entity;
-  constructor(name: string, instance: Entity) {
-    super(name, "entity");
+  public instance: Entity;
+  constructor(name: string, service: string, instance: Entity) {
+    super(name, service, "entity");
     if (!instance || instance._instance.description !== "entity") {
       throw new Error("Instance is not of type Service");
     }
     this.instance = instance;
+  }
+
+  hasAccessPattern(accessPattern: string): boolean {
+    return this.instance.model.translations.indexes.fromAccessPatternToIndex[accessPattern] !== undefined
   }
 
   getStaticProperties(): {name: string, value: string}[] {
@@ -204,11 +225,15 @@ export class EntityInstance extends Instance {
 }
 
 export class CollectionInstance extends Instance {
-  private instance: CollectionSchema;
+  public instance: CollectionSchema;
 
-  constructor(name: string, instance: CollectionSchema) {
-    super(name, "collection");
+  constructor(name: string, service: string, instance: CollectionSchema) {
+    super(name, service, "collection");
     this.instance = instance;
+  }
+
+  hasAccessPattern(accessPattern: string): boolean {
+    return this.name === accessPattern;
   }
 
   getStaticProperties(): {name: string, value: string}[] {
@@ -263,7 +288,7 @@ export class CollectionInstance extends Instance {
   getItem(): {[key: string]: Object} {
     let item: {[key: string]: Object} = {};
     for (let entity of Object.values(this.instance.entities)) {
-        let entityInstance = new EntityInstance(entity.model.entity, entity);
+        let entityInstance = new EntityInstance(entity.model.entity, entity.model.service, entity);
         let attributes = Object.values(entityInstance.getAttributes());
         let name = entityInstance.name;
         item[name] = attributes.map((attribute) => {
@@ -274,46 +299,93 @@ export class CollectionInstance extends Instance {
   }
 }
 
-export function isEntity(electro: ElectroInstanceType): electro is Entity {
-  return electro._instance.description === "entity";
-}
-
-export function isService(electro: ElectroInstanceType): electro is Service {
-  return electro._instance.description === "service";
-}
-
 export class ElectroInstance {
   public name: string;
   public isService: boolean;
   public instances: Instance[];
+  public service: string;
+  public electro: ElectroInstances;
+  public queries: Record<string, QueryMethod>;
+  public actions: Record<string, {remove?: QueryMethod}>
 
-  static parse(electro: ElectroInstanceType): [string, Instance[]] {
+  static isEntity(electro: ElectroInstances): electro is Entity {
+    return electro._instance.description === "entity";
+  }
+
+  static isService(electro: ElectroInstances): electro is Service {
+    return electro._instance.description === "service";
+  }
+
+  static parse(electro: ElectroInstances): {name: string, instances: Instance[], queries: Record<string, QueryMethod>, actions: Record<string, {remove?: QueryMethod}>} {
     let name: string;
     let instances: Instance[] = [];
-    if (isEntity(electro)) {
+    let queries: Record<string, QueryMethod> = {};
+    let actions: Record<string, {remove?: QueryMethod}> = {};
+
+    if (ElectroInstance.isEntity(electro)) {
       name = electro.model.entity;
-      instances.push(new EntityInstance(name, electro));
-    } else if (isService(electro)) {
+      instances.push(new EntityInstance(name, electro.model.service, electro));
+      for (let accessPattern in electro.query) {
+        queries[accessPattern] = electro.query[accessPattern];
+      }
+      actions[name] = {remove: (facets: object) => electro.delete(facets)};
+    } else if (ElectroInstance.isService(electro)) {
       name = electro.service.name;
-      for (let entity of Object.keys(electro.entities)) {
-        instances.push(new EntityInstance(entity, electro.entities[entity]));
+      for (let entity of Object.values(electro.entities)) {
+        instances.push(new EntityInstance(entity.model.entity, electro.service.name, entity));
+        for (let accessPattern in entity.query) {
+          /** Using `find` instead of `query` here to allow queries to turn into scans if not all values are provided **/
+          queries[accessPattern] = (facets: object) => entity.find(facets)
+          // queries[accessPattern] = entity.query[accessPattern];
+          /** -------------------------------------------------------------------------------------------------------- **/
+        }
+        actions[entity.model.entity] = {remove: (facets: object) => entity.delete(facets)};
+        // queries.delete = entity.delete;
       }
       for (let collection of Object.keys(electro.collectionSchema)) {
-        instances.push(new CollectionInstance(collection, electro.collectionSchema[collection]));
+        instances.push(new CollectionInstance(collection, electro.service.name, electro.collectionSchema[collection]));
+      }
+      for (let collection in electro.collections) {
+        queries[collection] = electro.collections[collection];
       }
     } else {
       throw new Error("File does not export instance of either Entity or Service.");
     }
-    return [name, instances];
+
+    return {name, instances, queries, actions};
   }
 
-  constructor(electro: ElectroInstanceType) {
-    let [name, instances] = ElectroInstance.parse(electro);
+  constructor(electro: ElectroInstances) {
+    let {name, queries, instances, actions} = ElectroInstance.parse(electro);
     this.name = name;
+    this.electro = electro;
+    this.queries = queries;
     this.instances = instances;
-    this.isService = isService(electro);
+    this.service = instances[0].service;
+    this.actions = actions;
+    this.isService = ElectroInstance.isService(electro);
+  }
+
+  getInstance(accessPattern: string): undefined | Instance {
+    return this.instances.find(instance => instance.hasAccessPattern(accessPattern));
   }
 }
+
+type InstanceQueryMethod = "get" | "delete" | "query" | "find";
+
+type AttributeFilterOperation = Record<FilterOperation, (value1: string, value2?: string) => string>
+
+type AttributeFilter = Record<string, AttributeFilterOperation>
+
+export type QueryConfiguration = {params?: {Table?: string, Limit?: number}};
+
+export type QueryOperation = {
+  go: (config: QueryConfiguration) => Promise<object>;
+  params: (config: QueryConfiguration) => object;
+  filter: (cb: (attr: AttributeFilter) => string) => QueryOperation
+};
+
+export type QueryMethod = (facets: object) => QueryOperation;
 
 export class InstanceReader {
   public filePath: string;
@@ -335,7 +407,7 @@ export class InstanceReader {
     }
   }
 
-  get(): ElectroInstanceType {
+  get(): ElectroInstances {
     let instance = require(this.filePath);
     if (instance && instance._instance) {
         return instance;

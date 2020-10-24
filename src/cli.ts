@@ -75,17 +75,19 @@ export function loadServices(program: commander.Command) {
 function serviceCommand(program: commander.Command, service: ElectroInstance): void {
   let instanceSubCommands: Record<string, commander.Command> = {};
   for (let instance of service.instances) {
-    let subCommand = new commander.Command(instance.name) //.description(`Queries and operations for ${instance.name}.`)
-    instanceSubCommands[instance.name] = subCommand;
+    if (instance.type === "entity") {
+      let subCommand = new commander.Command(instance.name) //.description(`Queries and operations for ${instance.name}.`)
+      instanceSubCommands[instance.name] = subCommand;
+    }
   }
   for (let accessPattern in service.queries) {
     let instance = service.getInstance(accessPattern);
     let subCommand: commander.Command;
-    if (instance) {
+    if (instance && instance.type === "entity") {
       subCommand = instanceSubCommands[instance.name];
       queryCommand(subCommand, {
         name: accessPattern.toLowerCase(),
-        description: `Query database for Access Pattern: ${accessPattern}.`,
+        description: `Query the entity "${instance.name}" by "${accessPattern}".`,
         query: service.queries[accessPattern],
         attributes: Object.values(instance.getAttributes()),
         facets: instance.getFacets(instance.getIndexName(accessPattern)).map(facet => {
@@ -94,6 +96,18 @@ function serviceCommand(program: commander.Command, service: ElectroInstance): v
         }),
         actions: service.actions[instance.name]
       });
+    } else if (instance && instance.type === "collection") {
+      subCommand = program;
+      queryCommand(subCommand, {
+        name: accessPattern.toLowerCase(),
+        description: `Query the collection "${accessPattern}".`,
+        query: service.queries[accessPattern],
+        attributes: Object.values(instance.getAttributes()),
+        facets: instance.getFacets(instance.getIndexName(accessPattern)),
+        actions: service.actions[instance.name]
+      });
+    } else {
+      continue;
     }
   }
   for (let subCommand of Object.values(instanceSubCommands)) {

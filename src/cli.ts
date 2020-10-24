@@ -132,26 +132,24 @@ function queryCommand(program: commander.Command, params: QueryCommandParams): c
       validateQueryParams(options);
       execute(params.query(facets), options)
         .then(async data => {
-          if (params.actions.remove !== undefined) {
-            if (options.delete && params.actions.remove !== undefined) {
-              let results = await Promise.all(data.map((result: object) => {
-                if (params.actions.remove) {
-                return execute(params.actions.remove(result), Object.assign({}, options))
-                  .then(() => {
-                    return ["", result];
-                  })
-                  .catch((err: Error) => {
-                    return [err.message, result];
-                  })
-                }
-              }));
-              results.forEach((results: any) => {
-                let [err, result]: [string, object] = results;
-                if (err) {
-                  console.log(colors.red(JSON.stringify(result, null, 2)))
-                }
-              });
-            }
+          if (options.delete && params.actions.remove !== undefined) {
+            let results = await Promise.all(data.map((result: object) => {
+              if (params.actions.remove) {
+              return execute(params.actions.remove(result), Object.assign({}, options))
+                .then(() => {
+                  return ["", result];
+                })
+                .catch((err: Error) => {
+                  return [err.message, result];
+                })
+              }
+            }));
+            results.forEach((results: any) => {
+              let [err, result]: [string, object] = results;
+              if (err) {
+                console.log(colors.red(JSON.stringify(result, null, 2)))
+              }
+            });
           } else {
             return data;
           }
@@ -224,14 +222,6 @@ function filter(attributes: string[]) {
   }
 }
 
-function applyOptions(program: commander.Command, attributes: string[], table: string) {
-  return program
-    .option("-r, --raw", "Retrun raw field response.")
-    .option("-p, --params", "Return docClient params as results.")
-    .option("-t, --table <table>", "Override table defined on model", table)
-    .option(`-w, --where <expression>`, `Supply a where expression "<attribute> <operation> <value>". Available attributes include ${attributes.join(", ")}`, filter(attributes), []);
-}
-
 type InstanceCommandOptions = {
   raw?: boolean;
   params?: boolean;
@@ -244,12 +234,23 @@ type AttributeFilterOperation = Record<FilterOperation, (value1: string, value2?
 type AttributeFilter = Record<string, AttributeFilterOperation>
 
 async function execute(query: QueryOperation, options: InstanceCommandOptions): Promise<any> {
+  // for (let filter of options.filter) {
+  //   query.filter((attr: AttributeFilter) => {
+  //     if (filter.value2) {
+  //       return `${attr[filter.attribute][filter.operation](filter.value1, filter.value2)}`
+  //     } else {
+  //       return `${attr[filter.attribute][filter.operation](filter.value1)}`
+  //     }
+  //   })
+  // }
   for (let filter of options.filter) {
-    query.filter((attr: AttributeFilter) => {
+    query.where((attr, op) => {
       if (filter.value2) {
-        return `${attr[filter.attribute][filter.operation](filter.value1, filter.value2)}`
+        return `${op[filter.operation](attr[filter.attribute], filter.value1, filter.value2)}`
+      } else if (filter.value1) {
+        return `${op[filter.operation](attr[filter.attribute], filter.value1)}`
       } else {
-        return `${attr[filter.attribute][filter.operation](filter.value1)}`
+        return `${op[filter.operation](attr[filter.attribute])}`
       }
     })
   }

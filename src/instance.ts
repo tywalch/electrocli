@@ -1,5 +1,5 @@
 import {RemoteFile} from "./files";
-
+const FilterOperations = ["eq","gt","lt","gte","lte","between","begins","exists","notExists","contains","notContains"] as const;
 export type IndexTypes = 'pk' | 'sk'
 
 export type Attribute = {
@@ -77,7 +77,7 @@ type CollectionSchema = {
   keys: Index & {name: string}
 }
 
-export type FilterOperation = (typeof Instance.FilterOperations)[number];
+export type FilterOperation = (typeof FilterOperations)[number];
 
 export abstract class Instance {
   public name: string;
@@ -94,7 +94,7 @@ export abstract class Instance {
   abstract getIndexes(): Index[]
   abstract getStaticProperties(): {name: string, value: string}[];
   abstract hasAccessPattern(accessPattern: string): boolean;
-  static readonly FilterOperations = ["eq","gt","lt","gte","lte","between","begins","exists","notExists","contains","notContains"];
+  static readonly FilterOperations = FilterOperations;
   static isOperation(operation: string = ""): operation is FilterOperation {
     return !!Instance.FilterOperations.find(op => op.toLowerCase() === operation.toLowerCase());
   }
@@ -374,8 +374,11 @@ export class ElectroInstance {
 type InstanceQueryMethod = "get" | "delete" | "query" | "find";
 
 type AttributeFilterOperation = Record<FilterOperation, (value1: string, value2?: string) => string>
-
 type AttributeFilter = Record<string, AttributeFilterOperation>
+const whereAttributeSymbol: unique symbol = Symbol("where");
+type WhereAttribute = typeof whereAttributeSymbol
+export type AttributeWhere = Record<string, WhereAttribute>
+export type OperationWhere = Record<FilterOperation, (attr: WhereAttribute, value1?: string, value2?: string) => string>
 
 export type QueryConfiguration = {params?: {Table?: string, Limit?: number}};
 
@@ -383,6 +386,7 @@ export type QueryOperation = {
   go: (config: QueryConfiguration) => Promise<object>;
   params: (config: QueryConfiguration) => object;
   filter: (cb: (attr: AttributeFilter) => string) => QueryOperation
+  where: (cb: (attr: AttributeWhere, op: OperationWhere) => string) => QueryOperation
 };
 
 export type QueryMethod = (facets: object) => QueryOperation;

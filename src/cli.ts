@@ -4,8 +4,10 @@ import {ReferenceStore, ReferenceConfiguration, AddReferenceConfiguration} from 
 import {ElectroInstance, InstanceReader, QueryMethod, Instance, Attribute, Facet, QueryOperation, QueryConfiguration} from "./instance";
 import generate from "./generate";
 
-
 export default function(program: commander.Command) {
+  const config = new commander.Command("config").description("Add/Remove/List instance references");
+  const query = new commander.Command("query").description("Query local instances that have been added to the CLI");
+
   program
     .command("typedef <filepath>")
     .description("Specify a file that exports an ElectroDB Service or Entity and Electro will automatically generate a typescript type definition file.")
@@ -15,7 +17,7 @@ export default function(program: commander.Command) {
       console.log(display);
     });
   
-  program
+  config
     .command("add <filepath>")
     .description("Specify a file that exports an ElectroDB Service or Entity and Electro will add that Instance to the CLI")
     .option("-s, --service <name>", "Specify a custom tag for this service to appear in the CLI")
@@ -29,7 +31,7 @@ export default function(program: commander.Command) {
       console.log(display);
     });
 
-  program
+  config
     .command("remove <service>")
     .alias("rm <service>")
     .description("Remove references added to the Electro CLI")
@@ -40,7 +42,7 @@ export default function(program: commander.Command) {
       console.log(display);
     });
 
-  program
+  config
     .command("list")
     .alias("ls")
     .description("List all ElectroDB instances that have been imported into the Electro cli")
@@ -52,7 +54,9 @@ export default function(program: commander.Command) {
     });
 
   try {
-    loadServices(program);
+    loadServices(query);
+    program.addCommand(config);
+    program.addCommand(query);
     commander.parse(process.argv);
   } catch(err) {
     console.log("Error:", err, err.message);
@@ -73,19 +77,10 @@ export function loadServices(program: commander.Command) {
 }
 
 function serviceCommand(program: commander.Command, service: ElectroInstance): void {
-  let instanceSubCommands: Record<string, commander.Command> = {};
-  for (let instance of service.instances) {
-    if (instance.type === "entity") {
-      let subCommand = new commander.Command(instance.name) //.description(`Queries and operations for ${instance.name}.`)
-      instanceSubCommands[instance.name] = subCommand;
-    }
-  }
   for (let accessPattern in service.queries) {
     let instance = service.getInstance(accessPattern);
-    let subCommand: commander.Command;
     if (instance && instance.type === "entity") {
-      subCommand = instanceSubCommands[instance.name];
-      queryCommand(subCommand, {
+      queryCommand(program, {
         name: accessPattern.toLowerCase(),
         description: `Query the entity "${instance.name}" by "${accessPattern}".`,
         query: service.queries[accessPattern],
@@ -97,8 +92,7 @@ function serviceCommand(program: commander.Command, service: ElectroInstance): v
         actions: service.actions[instance.name]
       });
     } else if (instance && instance.type === "collection") {
-      subCommand = program;
-      queryCommand(subCommand, {
+      queryCommand(program, {
         name: accessPattern.toLowerCase(),
         description: `Query the collection "${accessPattern}".`,
         query: service.queries[accessPattern],
@@ -110,10 +104,52 @@ function serviceCommand(program: commander.Command, service: ElectroInstance): v
       continue;
     }
   }
-  for (let subCommand of Object.values(instanceSubCommands)) {
-    program.addCommand(subCommand);
-  }
 }
+
+
+/** THIS CODE WILL NEST ENTITY ACCESS PATTERNS BENEATH THE ENTITY **/
+// function serviceCommand(program: commander.Command, service: ElectroInstance): void {
+//   let instanceSubCommands: Record<string, commander.Command> = {};
+//   for (let instance of service.instances) {
+//     if (instance.type === "entity") {
+//       let subCommand = new commander.Command(instance.name) //.description(`Queries and operations for ${instance.name}.`)
+//       instanceSubCommands[instance.name] = subCommand;
+//     }
+//   }
+//   for (let accessPattern in service.queries) {
+//     let instance = service.getInstance(accessPattern);
+//     let subCommand: commander.Command;
+//     if (instance && instance.type === "entity") {
+//       subCommand = instanceSubCommands[instance.name];
+//       queryCommand(subCommand, {
+//         name: accessPattern.toLowerCase(),
+//         description: `Query the entity "${instance.name}" by "${accessPattern}".`,
+//         query: service.queries[accessPattern],
+//         attributes: Object.values(instance.getAttributes()),
+//         facets: instance.getFacets(instance.getIndexName(accessPattern)).map(facet => {
+//           facet.type = "sk"
+//           return facet;
+//         }),
+//         actions: service.actions[instance.name]
+//       });
+//     } else if (instance && instance.type === "collection") {
+//       subCommand = program;
+//       queryCommand(subCommand, {
+//         name: accessPattern.toLowerCase(),
+//         description: `Query the collection "${accessPattern}".`,
+//         query: service.queries[accessPattern],
+//         attributes: Object.values(instance.getAttributes()),
+//         facets: instance.getFacets(instance.getIndexName(accessPattern)),
+//         actions: service.actions[instance.name]
+//       });
+//     } else {
+//       continue;
+//     }
+//   }
+//   for (let subCommand of Object.values(instanceSubCommands)) {
+//     program.addCommand(subCommand);
+//   }
+// }
 
 type QueryCommandParams = {name: string, description: string, query: QueryMethod, attributes: Attribute[], facets: Facet[], actions: {remove?: QueryMethod}};
 

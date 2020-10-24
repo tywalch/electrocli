@@ -1,5 +1,5 @@
 import Table from "cli-table";
-import {File, RemoteFile} from "./files";
+import {File, LocalFile} from "./files";
 import { ElectroInstance } from "./instance";
 
 type ReferenceDetail = {
@@ -15,7 +15,7 @@ export type AddReferenceConfiguration = {
 export class ReferenceStore {
   public file: File<InstanceReferences>;
   constructor(filePath: string) {
-    this.file = new RemoteFile<InstanceReferences>(filePath);
+    this.file = new LocalFile<InstanceReferences>(filePath);
   }
 
   private write(payload: InstanceReferences): InstanceReferences {

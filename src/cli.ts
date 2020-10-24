@@ -1,7 +1,7 @@
 import colors from "colors";
 import commander from "commander";
-import {ReferenceStore, ReferenceConfiguration, AddReferenceConfiguration} from "./store";
-import {ElectroInstance, InstanceReader, QueryMethod, Instance, Attribute, Facet, QueryOperation, QueryConfiguration} from "./instance";
+import {ReferenceStore, ReferenceConfiguration} from "./store";
+import {ElectroInstance, InstanceReader, QueryMethod, Attribute, Facet, QueryOperation, QueryConfiguration} from "./instance";
 import generate from "./generate";
 
 export default function(program: commander.Command) {

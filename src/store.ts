@@ -1,5 +1,5 @@
 import Table from "cli-table";
-import {File, LocalFile} from "./files";
+import {File, LocalFile, RemoteFile} from "./files";
 import { ElectroInstance } from "./instance";
 
 type ReferenceDetail = {

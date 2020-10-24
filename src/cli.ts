@@ -5,7 +5,6 @@ import {ElectroInstance, InstanceReader, QueryMethod, Attribute, Facet, QueryOpe
 import generate from "./generate";
 
 export default function(program: commander.Command) {
-  const config = new commander.Command("config").description("Add/Remove/List instance references");
   const query = new commander.Command("query").description("Query local instances that have been added to the CLI");
 
   program
@@ -17,7 +16,7 @@ export default function(program: commander.Command) {
       console.log(display);
     });
   
-  config
+  program
     .command("add <filepath>")
     .description("Specify a file that exports an ElectroDB Service or Entity and Electro will add that Instance to the CLI")
     .option("-s, --service <name>", "Specify a custom tag for this service to appear in the CLI")
@@ -31,7 +30,7 @@ export default function(program: commander.Command) {
       console.log(display);
     });
 
-  config
+  program
     .command("remove <service>")
     .alias("rm <service>")
     .description("Remove references added to the Electro CLI")
@@ -42,7 +41,7 @@ export default function(program: commander.Command) {
       console.log(display);
     });
 
-  config
+  program
     .command("list")
     .alias("ls")
     .description("List all ElectroDB instances that have been imported into the Electro cli")
@@ -55,7 +54,6 @@ export default function(program: commander.Command) {
 
   try {
     loadServices(query);
-    program.addCommand(config);
     program.addCommand(query);
     commander.parse(process.argv);
   } catch(err) {

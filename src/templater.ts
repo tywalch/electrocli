@@ -123,7 +123,6 @@ export default class InstanceTemplater extends ElectroInstance {
   }
 
   private template(data: TemplateData, template: string): string {
-    // let file = fs.readFileSync(templateFileName, "utf8");
     let templater = this.handlebars.compile(template);
     return templater(data);
   }

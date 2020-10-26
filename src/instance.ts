@@ -326,7 +326,10 @@ export class ElectroInstance {
       name = electro.model.entity;
       instances.push(new EntityInstance(name, electro.model.service, electro));
       for (let accessPattern in electro.query) {
-        queries[accessPattern] = electro.query[accessPattern];
+        /** Using `find` instead of `query` here to allow queries to turn into scans if not all values are provided **/
+        queries[accessPattern] = (facets: object) => electro.find(facets);
+        // queries[accessPattern] = electro.query[accessPattern];
+        /** -------------------------------------------------------------------------------------------------------- **/
       }
       actions[name] = {remove: (facets: object) => electro.delete(facets)};
     } else if (ElectroInstance.isService(electro)) {
@@ -335,7 +338,7 @@ export class ElectroInstance {
         instances.push(new EntityInstance(entity.model.entity, electro.service.name, entity));
         for (let accessPattern in entity.query) {
           /** Using `find` instead of `query` here to allow queries to turn into scans if not all values are provided **/
-          queries[accessPattern] = (facets: object) => entity.find(facets)
+          queries[accessPattern] = (facets: object) => entity.find(facets);
           // queries[accessPattern] = entity.query[accessPattern];
           /** -------------------------------------------------------------------------------------------------------- **/
         }

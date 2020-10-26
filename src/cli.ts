@@ -282,15 +282,6 @@ type AttributeFilterOperation = Record<FilterOperation, (value1: string, value2?
 type AttributeFilter = Record<string, AttributeFilterOperation>
 
 async function execute(query: QueryOperation, options: InstanceCommandOptions): Promise<any> {
-  // for (let filter of options.filter) {
-  //   query.filter((attr: AttributeFilter) => {
-  //     if (filter.value2) {
-  //       return `${attr[filter.attribute][filter.operation](filter.value1, filter.value2)}`
-  //     } else {
-  //       return `${attr[filter.attribute][filter.operation](filter.value1)}`
-  //     }
-  //   })
-  // }
   for (let filter of options.filter) {
     query.where((attr, op) => {
       if (filter.value2) {
@@ -320,5 +311,4 @@ async function execute(query: QueryOperation, options: InstanceCommandOptions): 
   return query.go(config)
 }
 
-// TODO: CHANGE `FILTER` TO `WHERE`
 // TODO: MAKE TABLE THE STANDARD OUTPUT

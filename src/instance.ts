@@ -34,7 +34,10 @@ export type ElectroInstances = Service | Entity;
 
 export type Entity = {
   _instance: {description: "entity"} // really a `symbol` but typescript doesnt understand
-  modelAttributeIdentifier: string;
+  identifiers: {
+    model: string
+    version: string
+  };
   query: Record<string, QueryMethod>,
   get(val: any): any
   delete: QueryMethod
@@ -188,7 +191,7 @@ export class EntityInstance extends Instance {
   getStaticProperties(): {name: string, value: string}[] {
     return [
       {name: "model", value: JSON.stringify(this.instance.model)},
-      {name: "modelAttributeIdentifier", value: JSON.stringify(this.instance.modelAttributeIdentifier)}
+      {name: "identifiers", value: JSON.stringify(this.instance.identifiers)}
     ]
   }
 

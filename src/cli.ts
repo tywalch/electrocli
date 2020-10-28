@@ -66,14 +66,17 @@ export function loadServices(program: commander.Command) {
   const store = new ReferenceStore("./.electro_config");
   let services = store.get();
   for (let name of Object.keys(services)) {
-    let reader = new InstanceReader(services[name].filePath);
+    let reader;
     let instance;
     try {
+      reader = new InstanceReader(services[name].filePath);
       instance = reader.get();
     } catch(err) {
-      console.log(`Error loading service "${name}": ${err.message}`)
+      console.log(colors.red(`
+Error loading service "${name}": ${err.message} - Remove this entity using 'remove' command or use the 'add' command with the --force flag to update the file path. 
+`))
     }
-    if (instance === undefined) {
+    if (instance === undefined || reader === undefined) {
       continue;
     }
     let service = new ElectroInstance(reader.get());

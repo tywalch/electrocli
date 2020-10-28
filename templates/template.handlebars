@@ -169,6 +169,7 @@ export declare namespace {{name}}Entity {
         put: (record: Item) => {go: GoRecord<Item>};
         create: (record: Item) => {go: GoRecord<Item>};
         find: (record: Partial<Item>) => RecordsActionOptions;
+        setIdentifier: (type: "model" | "table", value: string) => void
         query: {
             {{#each indexes}}
             {{#if index}}

@@ -1,7 +1,7 @@
 import colors from "colors";
 import commander from "commander";
 import {ReferenceStore, ReferenceConfiguration} from "./store";
-import {ElectroInstance, InstanceReader, QueryMethod, Attribute, Facet, QueryOperation, QueryConfiguration} from "./instance";
+import {ElectroInstance, InstanceReader, QueryMethod, Attribute, Facet, QueryOperation, QueryConfiguration, Instance} from "./instance";
 import generate from "./generate";
 
 export default function(program: commander.Command) {
@@ -67,6 +67,15 @@ export function loadServices(program: commander.Command) {
   let services = store.get();
   for (let name of Object.keys(services)) {
     let reader = new InstanceReader(services[name].filePath);
+    let instance;
+    try {
+      instance = reader.get();
+    } catch(err) {
+      console.log(`Error loading service "${name}": ${err.message}`)
+    }
+    if (instance === undefined) {
+      continue;
+    }
     let service = new ElectroInstance(reader.get());
     let command = new commander.Command(name.toLowerCase()) //.description(`Commands for the ${service.service} service.`);
     serviceCommand(command, service);

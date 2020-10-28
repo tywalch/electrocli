@@ -58,3 +58,12 @@ export class RemoteFile<T extends string | object> extends File<T> {
     this.filePath = path.resolve(process.cwd(), filePath);
   }
 }
+
+export class AbsoluteFile<T extends string | object> extends File<T> {
+  public filePath: string;
+
+  constructor(filePath: string) {
+    super();
+    this.filePath = path.resolve(filePath);
+  }
+}

@@ -1,4 +1,5 @@
-import {RemoteFile} from "./files";
+import { isAbsolute } from "path";
+import {RemoteFile, AbsoluteFile} from "./files";
 const FilterOperations = ["eq","gt","lt","gte","lte","between","begins","exists","notExists","contains","notContains"] as const;
 export type IndexTypes = 'pk' | 'sk'
 

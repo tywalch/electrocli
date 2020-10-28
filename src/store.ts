@@ -4,12 +4,19 @@ import { ElectroInstance } from "./instance";
 
 type ReferenceDetail = {
   filePath: string;
+  endpoint?: string;
+  table?: string;
+  region?: string;
 };
 
 type InstanceReferences = Record<string, ReferenceDetail>;
 
 export type AddReferenceConfiguration = {
+  label?: string;
   overwrite?: boolean;
+  region?: string;
+  table?: string;
+  endpoint?: string;
 }
 
 export class ReferenceStore {
@@ -33,7 +40,7 @@ export class ReferenceStore {
     return this.read();
   }
 
-  append(filePath: string, name: string, {overwrite = false}: AddReferenceConfiguration = {}): InstanceReferences {
+  append(filePath: string, name: string, {overwrite = false, endpoint, region, table}: AddReferenceConfiguration = {}): InstanceReferences {
     let config = this.get();
     let existing = config[name];
     let file = new RemoteFile(filePath);
@@ -46,7 +53,7 @@ export class ReferenceStore {
         throw new Error(`Service name ${name} is already associated with file ${existing.filePath}. Remove this service first if you still wish to use the name ${name}.`)
       }
     }
-    config[name] = {filePath: file.path()};
+    config[name] = {filePath: file.path(), endpoint, region, table};
     this.write(config);
     return config;
   }
@@ -73,9 +80,9 @@ export class ReferenceConfiguration {
     this.store = store;
   }
 
-  add(filePath: string, instance: ElectroInstance, name: string = "", {overwrite}: AddReferenceConfiguration = {}) {
+  add(filePath: string, instance: ElectroInstance, name: string = "", {overwrite, endpoint, region, table}: AddReferenceConfiguration = {}) {
     let serviceName = typeof name === "string" && name.length > 0 ? name : instance.name;
-    this.store.append(filePath, serviceName, {overwrite});
+    this.store.append(filePath, serviceName, {overwrite, endpoint, region, table});
     return serviceName;
   }
 
@@ -86,9 +93,9 @@ export class ReferenceConfiguration {
 
   list() {
     let services = this.store.get();
-    let table = new Table({head: ["service", "location"]});
+    let table = new Table({head: ["service", "location", "table", "endpoint", "region"]});
     for (let name of Object.keys(services)) {
-      table.push([name, services[name].filePath]);
+      table.push([name, services[name].filePath, services[name].table || "na", services[name].endpoint || "na", services[name].region || "na"]);
     }
     return table.toString();
   }

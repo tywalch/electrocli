@@ -1,6 +1,6 @@
 import colors from "colors";
 import commander from "commander";
-import {ReferenceStore, ReferenceConfiguration} from "./store";
+import {ReferenceStore, ReferenceConfiguration, AddReferenceConfiguration} from "./store";
 import {ElectroInstance, InstanceReader, QueryMethod, Attribute, Facet, QueryOperation, QueryConfiguration, Instance} from "./instance";
 import generate from "./generate";
 
@@ -19,20 +19,23 @@ export default function(program: commander.Command) {
   program
     .command("add <filepath>")
     .description("Specify a file that exports an ElectroDB Service or Entity and Electro will add that Instance to the CLI")
-    .option("-s, --service <name>", "Specify a custom tag for this service to appear in the CLI")
+    .option("-l, --label <label>", "Specify a custom label for this service to appear in the CLI")
+    .option("-t, --table <table>", "Specify a default table to use with this instance")
+    .option("-e, --endpoint <url>", "Specify a default dynamodb endpoint to use with this instance (model imports only)")
+    .option("-r, --region <region>", "Specify a default aws region to use with this instance (model imports only)")
     .option("-o, --overwrite", "Overwrite existing tag if already exists")
-    .action((filePath: string, {name, overwrite}: {name?: string, overwrite?: boolean} = {}) => {
+    .action((filePath: string, {label, overwrite, table, endpoint, region}: AddReferenceConfiguration = {}) => {
       const store = new ReferenceStore("./.electro_config");
       const config = new ReferenceConfiguration(store);
       let instanceReader = new InstanceReader(filePath);
-      let instance = new ElectroInstance(instanceReader.get());
-      let display = config.add(filePath, instance, name, {overwrite});
+      let instance = new ElectroInstance(instanceReader.get({table, endpoint, region}));
+      let display = config.add(filePath, instance, label, {overwrite, table, endpoint, region});
       console.log(display);
     });
 
   program
     .command("remove <service>")
-    .alias("rm <service>")
+    .alias("rm")
     .description("Remove references added to the Electro CLI")
     .action((service: string) => {
       const store = new ReferenceStore("./.electro_config");
@@ -57,7 +60,7 @@ export default function(program: commander.Command) {
     program.addCommand(query);
     commander.parse(process.argv);
   } catch(err) {
-    console.log("Error:", err, err.message);
+    console.log("Error:", err.message);
     process.exit(1);
   }
 }
@@ -70,7 +73,7 @@ export function loadServices(program: commander.Command) {
     let instance;
     try {
       reader = new InstanceReader(services[name].filePath);
-      instance = reader.get();
+      instance = reader.get(services[name]);
     } catch(err) {
       console.log(colors.red(`
 Error loading service "${name}": ${err.message} - Remove this entity using 'remove' command or use the 'add' command with the --force flag to update the file path. 
@@ -79,7 +82,7 @@ Error loading service "${name}": ${err.message} - Remove this entity using 'remo
     if (instance === undefined || reader === undefined) {
       continue;
     }
-    let service = new ElectroInstance(reader.get());
+    let service = new ElectroInstance(reader.get(services[name]));
     let command = new commander.Command(name.toLowerCase()) //.description(`Commands for the ${service.service} service.`);
     serviceCommand(command, service);
     program.addCommand(command);
@@ -186,7 +189,7 @@ function queryCommand(program: commander.Command, params: QueryCommandParams): c
     program = program.option("-d, --delete", "Delete items returned from query");
   }
 
-  program.action((...args: any) => {
+  program.action(async (...args: any) => {
       let options = args[args.length - 1];
       let facets = parseFacets(args, params.facets);
       validateQueryParams(options);
@@ -219,7 +222,7 @@ function queryCommand(program: commander.Command, params: QueryCommandParams): c
             console.log(JSON.stringify(data, null, 2))
           }
         })
-        .catch(err => colors.red(err.message));
+        .catch(err => console.log(colors.red(err.message)));
     });
   return program;
 }
@@ -320,7 +323,7 @@ async function execute(query: QueryOperation, options: InstanceCommandOptions): 
     return console.log(query.params(config));
   }
 
-  return query.go(config)
+  return query.go(config);
 }
 
 // TODO: MAKE TABLE THE STANDARD OUTPUT

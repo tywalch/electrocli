@@ -1,7 +1,9 @@
-import { isAbsolute } from "path";
-import {RemoteFile, AbsoluteFile} from "./files";
+import {RemoteFile} from "./files";
+const {Entity} = require("electrodb");
+
 const FilterOperations = ["eq","gt","lt","gte","lte","between","begins","exists","notExists","contains","notContains"] as const;
-export type IndexTypes = 'pk' | 'sk'
+
+export type IndexTypes = 'pk' | 'sk';
 
 export type Attribute = {
   type: 'string' | 'number' | 'boolean' | 'any' | 'enum';
@@ -418,11 +420,26 @@ export class InstanceReader {
     }
   }
 
-  get(): ElectroInstances {
+  get({table, endpoint, region}: {table?: string, endpoint?: string, region?: string} = {}): ElectroInstances {
     let instance = require(this.filePath);
     if (instance && instance._instance) {
         return instance;
-    } else if (false) {
+    } else if (instance.attributes) {
+      try {
+        const DynamoDB = require("aws-sdk/clients/dynamodb");
+        const config: {endpoint?: string, region?: string} = {};
+        if (endpoint) {
+          config.endpoint = endpoint; 
+        }
+        if (region) {
+          config.region = region;
+        }
+        const client = new DynamoDB.DocumentClient(config);
+        const default_table_name = "your_table_name";
+        return new Entity(instance, {table: table || default_table_name, client});
+      } catch(err) {
+        throw new Error("File must instance of Entity, Service, or Model.");
+      }
       // placeholder for importing model;
     } else {
       throw new Error("File must instance of Entity, Service, or Model.");

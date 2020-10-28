@@ -1,6 +1,6 @@
 {
   "name": "electrocli",
-  "version": "0.1.9",
+  "version": "0.1.10",
   "description": "",
   "main": "dist/bin/index.js",
   "types": "dist/bin/index.d.ts",
@@ -25,11 +25,12 @@
     "aws"
   ],
   "dependencies": {
-    "@types/cli-table": "^0.3.0",
-    "cli-table": "^0.3.1",
-    "colors": "^1.4.0",
-    "commander": "^6.1.0",
-    "electrodb": "^0.9.19",
-    "handlebars": "^4.7.6"
+    "@types/cli-table": "0.3.0",
+    "aws-sdk": "^2.781.0",
+    "cli-table": "0.3.1",
+    "colors": "1.4.0",
+    "commander": "6.1.0",
+    "electrodb": "0.9.22",
+    "handlebars": "4.7.6"
   }
 }

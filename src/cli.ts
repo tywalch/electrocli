@@ -29,8 +29,9 @@ export default function(program: commander.Command) {
       const store = new ReferenceStore("./.electro_config");
       const config = new ReferenceConfiguration(store);
       let instanceReader = new InstanceReader(filePath);
-      let instance = new ElectroInstance(instanceReader.get({table, endpoint, region}));
-      let display = config.add(filePath, instance, label, {overwrite, table, endpoint, region});
+      let [, instance] = instanceReader.get({table, endpoint, region});
+      let electro = new ElectroInstance(instance);
+      let display = config.add(filePath, electro, label, {overwrite, table, endpoint, region});
       console.log(display);
     });
 
@@ -78,7 +79,7 @@ export function loadQueries(program: commander.Command, serviceCommand: ServiceC
     let instance;
     try {
       reader = new InstanceReader(services[name].filePath);
-      instance = reader.get(services[name]);
+      [,instance] = reader.get(services[name]);
     } catch(err) {
       console.log(colors.red(`
 Error loading service "${name}": ${err.message} - Remove this entity using 'remove' command or use the 'add' command with the --force flag to update the file path. 
@@ -87,7 +88,7 @@ Error loading service "${name}": ${err.message} - Remove this entity using 'remo
     if (instance === undefined || reader === undefined) {
       continue;
     }
-    let service = new ElectroInstance(reader.get(services[name]));
+    let service = new ElectroInstance(instance);
     let command = new commander.Command(name.toLowerCase()) //.description(`Commands for the ${service.service} service.`);
     serviceCommand(command, service);
     program.addCommand(command);

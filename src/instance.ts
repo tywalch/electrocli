@@ -31,7 +31,7 @@ type IndexFacet = {
 }
 
 export type InstanceAccessType = "entity" | "collection";
-export type ElectroInstanceType = "service" | "entity";
+export type ElectroInstanceType = "service" | "entity" | "model";
 export type ElectroInstances = Service | Entity;
 
 export type Entity = {
@@ -427,10 +427,14 @@ export class InstanceReader {
     }
   }
 
-  get({table, endpoint, region}: {table?: string, endpoint?: string, region?: string} = {}): ElectroInstances {
+  isElectroInstance(instance: any): instance is ElectroInstances {
+      return instance && instance._instance !== undefined;
+  }
+
+  get({table, endpoint, region}: {table?: string, endpoint?: string, region?: string} = {}): [ElectroInstanceType, ElectroInstances] {
     let instance = require(this.filePath);
-    if (instance && instance._instance) {
-        return instance;
+    if (this.isElectroInstance(instance)) {
+      return [instance._instance.description, instance];
     } else if (instance.attributes) {
       try {
         const DynamoDB = require("aws-sdk/clients/dynamodb");
@@ -443,7 +447,7 @@ export class InstanceReader {
         }
         const client = new DynamoDB.DocumentClient(config);
         const default_table_name = "your_table_name";
-        return new Entity(instance, {table: table || default_table_name, client});
+        return ["model", new Entity(instance, {table: table || default_table_name, client})];
       } catch(err) {
         throw new Error("File must instance of Entity, Service, or Model.");
       }

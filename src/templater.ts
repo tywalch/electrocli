@@ -1,6 +1,6 @@
 import Handlebars from "./handlebars";
 import fs from "fs";
-import {ElectroInstance, ElectroInstances, IndexTypes, InstanceAccessType, Instance, Facet, Attribute} from "./instance";
+import {ElectroInstance, ElectroInstances, IndexTypes, InstanceAccessType, Instance, Facet, Attribute, ElectroInstanceType} from "./instance";
 import {LocalFile} from "./files";
 
 type AttributeDetail = {
@@ -45,6 +45,7 @@ type TemplateDataInstance = {
 }
 
 type TemplateData = {
+  type: ElectroInstanceType
   isService: boolean;
   export: string;
   instances: TemplateDataInstance[];
@@ -127,10 +128,11 @@ export default class InstanceTemplater extends ElectroInstance {
     return templater(data);
   }
 
-  compile(filePath: string): string {
+  compile(filePath: string, type: ElectroInstanceType): string {
     let file = new LocalFile<string>(filePath);
     file.test();
     let templateData: TemplateData = {
+      type,
       isService: this.isService,
       export: this.name,
       instances: []

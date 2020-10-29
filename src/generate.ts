@@ -13,9 +13,9 @@ function modifyExtension<T>(filePath: string, extension: string) {
 export default function generate(inFile: string, outFile: string = "") {
   try {
     let reader = new InstanceReader(inFile);
-    let instance = reader.get();
+    let [type, instance] = reader.get();
     let templater = new Templater(instance);
-    let compiled = templater.compile(TEMPLATE_FILE);
+    let compiled = templater.compile(TEMPLATE_FILE, type);
     outFile = outFile || modifyExtension(reader.filePath, "d.ts");
     let writer = new RemoteFile(outFile);
     writer.write(compiled);

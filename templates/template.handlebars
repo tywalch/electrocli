@@ -1,7 +1,7 @@
 {{#each instances}}
 {{#eq type "entity"}}
-export declare namespace {{name}}Entity {
-    namespace WhereClause {
+export declare namespace {{name}} {
+    namespace Where {
         {{#each attributes}}
         const {{name}}Symbol: unique symbol;
 
@@ -127,7 +127,7 @@ export declare namespace {{name}}Entity {
 
     type FilterRecords = (filter: <T extends Attributes>(record: FilterAttributes<T>) => string) => RecordsActionOptions
 
-    type WhereRecords = (where: WhereClause.Callback) => RecordsActionOptions
+    type WhereRecords = (where: Where.Callback) => RecordsActionOptions
 
     type RecordsActionOptions = {
         go: GoRecord<Item[]>
@@ -187,7 +187,7 @@ export declare namespace {{name}}Entity {
 {{/eq}}
 {{#eq type "collection"}}
 export declare namespace {{name}}Collection {
-    namespace WhereClause {
+    namespace Where {
         {{#each attributes}}
         const {{name}}Symbol: unique symbol;
 
@@ -286,7 +286,7 @@ export declare namespace {{name}}Collection {
 
     type FilterRecords = (filter: <T extends Attributes>(record: FilterAttributes<T>) => string) => RecordsActionOptions
 
-    type WhereRecords = (where: WhereClause.Callback) => RecordsActionOptions
+    type WhereRecords = (where: Where.Callback) => RecordsActionOptions
 
     type RecordsActionOptions = {
         go: GoRecord<Item[]>
@@ -310,7 +310,7 @@ export declare class Instance {
     entities: {
         {{#each instances}}
         {{#eq type "entity"}}
-        {{name}}: {{name}}Entity.{{name}}, 
+        {{name}}: {{name}}.{{name}}, 
         {{/eq}}
         {{/each}}
     };
@@ -326,9 +326,11 @@ export declare class Instance {
 declare const _default: Instance;
 
 {{else}}
-export type Instance = {{export}}Entity.{{export}}
+export type Instance = {{export}}.{{export}}
 
 declare const _default: Instance;
 
 {{/if}}
+{{#ne type "model"}}
 export default _default;
+{{/ne}}

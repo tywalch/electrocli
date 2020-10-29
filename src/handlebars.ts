@@ -62,7 +62,14 @@ function eq(this: typeof Handlebars, type: any, value: any, options: Handlebars.
     : options.inverse(this);
 }
 
+function ne(this: typeof Handlebars, type: any, value: any, options: Handlebars.HelperOptions) {
+  return type === value
+    ? options.inverse(this)
+    : options.fn(this);
+}
+
 Handlebars.registerHelper({
+  ne,
   eq,
   union,
   prefix,

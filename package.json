@@ -30,7 +30,7 @@
     "cli-table": "0.3.1",
     "colors": "1.4.0",
     "commander": "6.1.0",
-    "electrodb": "0.9.22",
+    "electrodb": "^0.9.23",
     "handlebars": "4.7.6"
   }
 }

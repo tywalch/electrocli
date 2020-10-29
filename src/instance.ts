@@ -40,7 +40,7 @@ export type Entity = {
     model: string
     version: string
   };
-  query: Record<string, QueryMethod>,
+  query: QueryRecord,
   get(val: any): any
   delete: QueryMethod
   scan: QueryOperation,
@@ -73,7 +73,7 @@ export type Service = {
     table: string;
   }
   collectionSchema: Record<string, CollectionSchema>
-  collections: Record<string, QueryMethod>
+  collections: QueryRecord
   find: Record<string, any>
 }
 
@@ -305,13 +305,16 @@ export class CollectionInstance extends Instance {
   }
 }
 
+type QueryRecord = Record<string, QueryMethod>;
+
 export class ElectroInstance {
   public name: string;
   public isService: boolean;
   public instances: Instance[];
   public service: string;
   public electro: ElectroInstances;
-  public queries: Record<string, QueryMethod>;
+  public queries: QueryRecord;
+  public scans: QueryRecord;
   public actions: Record<string, {remove?: QueryMethod}>
 
   static isEntity(electro: ElectroInstances): electro is Entity {
@@ -322,15 +325,17 @@ export class ElectroInstance {
     return electro._instance.description === "service";
   }
 
-  static parse(electro: ElectroInstances): {name: string, instances: Instance[], queries: Record<string, QueryMethod>, actions: Record<string, {remove?: QueryMethod}>} {
+  static parse(electro: ElectroInstances): {name: string, instances: Instance[], queries: QueryRecord, actions: Record<string, {remove?: QueryMethod}>, scans: QueryRecord} {
     let name: string;
     let instances: Instance[] = [];
-    let queries: Record<string, QueryMethod> = {};
+    let queries: QueryRecord = {};
     let actions: Record<string, {remove?: QueryMethod}> = {};
-
+    let scans: QueryRecord = {};
     if (ElectroInstance.isEntity(electro)) {
       name = electro.model.entity;
-      instances.push(new EntityInstance(name, electro.model.service, electro));
+      let instance = new EntityInstance(name, electro.model.service, electro)
+      scans[name] = (facets: object) => electro.scan;
+      instances.push(instance);
       for (let accessPattern in electro.query) {
         /** Using `find` instead of `query` here to allow queries to turn into scans if not all values are provided **/
         queries[accessPattern] = (facets: object) => electro.find(facets);
@@ -342,10 +347,11 @@ export class ElectroInstance {
       name = electro.service.name;
       for (let entity of Object.values(electro.entities)) {
         instances.push(new EntityInstance(entity.model.entity, electro.service.name, entity));
+        scans[entity.model.entity] = (facets: object) => entity.scan;
         for (let accessPattern in entity.query) {
           /** Using `find` instead of `query` here to allow queries to turn into scans if not all values are provided **/
-          queries[accessPattern] = (facets: object) => entity.find(facets);
-          // queries[accessPattern] = entity.query[accessPattern];
+          // queries[accessPattern] = (facets: object) => entity.find(facets);
+          queries[accessPattern] = entity.query[accessPattern];
           /** -------------------------------------------------------------------------------------------------------- **/
         }
         actions[entity.model.entity] = {remove: (facets: object) => entity.delete(facets)};
@@ -361,11 +367,12 @@ export class ElectroInstance {
       throw new Error("File does not export instance of either Entity or Service.");
     }
 
-    return {name, instances, queries, actions};
+    return {name, instances, queries, actions, scans};
   }
 
   constructor(electro: ElectroInstances) {
-    let {name, queries, instances, actions} = ElectroInstance.parse(electro);
+    let {name, queries, instances, actions, scans} = ElectroInstance.parse(electro);
+    this.scans = scans;
     this.name = name;
     this.electro = electro;
     this.queries = queries;

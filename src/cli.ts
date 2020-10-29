@@ -6,6 +6,7 @@ import generate from "./generate";
 
 export default function(program: commander.Command) {
   const query = new commander.Command("query").description("Query local instances that have been added to the CLI");
+  const scan = new commander.Command("scan").description("Scan for local instances that have been added to the CLI");
 
   program
     .command("typedef <filepath>")
@@ -56,7 +57,9 @@ export default function(program: commander.Command) {
     });
 
   try {
-    loadServices(query);
+    loadQueries(query, queryCommand);
+    loadQueries(scan, scanCommand)
+    program.addCommand(scan);
     program.addCommand(query);
     commander.parse(process.argv);
   } catch(err) {
@@ -65,7 +68,9 @@ export default function(program: commander.Command) {
   }
 }
 
-export function loadServices(program: commander.Command) {
+type ServiceCommand = (program: commander.Command, service: ElectroInstance) => void;
+
+export function loadQueries(program: commander.Command, serviceCommand: ServiceCommand) {
   const store = new ReferenceStore("./.electro_config");
   let services = store.get();
   for (let name of Object.keys(services)) {
@@ -89,23 +94,21 @@ Error loading service "${name}": ${err.message} - Remove this entity using 'remo
   }
 }
 
-function serviceCommand(program: commander.Command, service: ElectroInstance): void {
+
+function queryCommand(program: commander.Command, service: ElectroInstance): void {
   for (let accessPattern in service.queries) {
     let instance = service.getInstance(accessPattern);
     if (instance && instance.type === "entity") {
-      queryCommand(program, {
+      executeQuery(program, {
         name: accessPattern.toLowerCase(),
         description: `Query the entity "${instance.name}" by "${accessPattern}".`,
         query: service.queries[accessPattern],
         attributes: Object.values(instance.getAttributes()),
-        facets: instance.getFacets(instance.getIndexName(accessPattern)).map(facet => {
-          facet.type = "sk"
-          return facet;
-        }),
+        facets: instance.getFacets(instance.getIndexName(accessPattern)),
         actions: service.actions[instance.name]
       });
     } else if (instance && instance.type === "collection") {
-      queryCommand(program, {
+      executeQuery(program, {
         name: accessPattern.toLowerCase(),
         description: `Query the collection "${accessPattern}".`,
         query: service.queries[accessPattern],
@@ -118,6 +121,24 @@ function serviceCommand(program: commander.Command, service: ElectroInstance): v
     }
   }
 }
+
+function scanCommand(program: commander.Command, service: ElectroInstance): void {
+  for (let entity in service.scans) {
+    let instance = service.instances.find(instance => instance.name === entity)
+    if (instance && instance.type === "entity") {
+      executeQuery(program, {
+        name: entity.toLowerCase(),
+        description: `Scan for the entity "${entity}".,`,
+        query: service.scans[entity],
+        attributes: Object.values(instance.getAttributes()),
+        facets: [],
+        actions: service.actions[entity]
+      });
+    }
+  }
+}
+
+
 
 
 /** THIS CODE WILL NEST ENTITY ACCESS PATTERNS BENEATH THE ENTITY **/
@@ -134,7 +155,7 @@ function serviceCommand(program: commander.Command, service: ElectroInstance): v
 //     let subCommand: commander.Command;
 //     if (instance && instance.type === "entity") {
 //       subCommand = instanceSubCommands[instance.name];
-//       queryCommand(subCommand, {
+//       executeQuery(subCommand, {
 //         name: accessPattern.toLowerCase(),
 //         description: `Query the entity "${instance.name}" by "${accessPattern}".`,
 //         query: service.queries[accessPattern],
@@ -147,7 +168,7 @@ function serviceCommand(program: commander.Command, service: ElectroInstance): v
 //       });
 //     } else if (instance && instance.type === "collection") {
 //       subCommand = program;
-//       queryCommand(subCommand, {
+//       executeQuery(subCommand, {
 //         name: accessPattern.toLowerCase(),
 //         description: `Query the collection "${accessPattern}".`,
 //         query: service.queries[accessPattern],
@@ -174,7 +195,7 @@ function validateQueryParams(params: InstanceCommandOptions): void {
   }
 }
 
-function queryCommand(program: commander.Command, params: QueryCommandParams): commander.Command {
+function executeQuery(program: commander.Command, params: QueryCommandParams): commander.Command {
   let attributeNames = params.attributes.map(attribute => attribute.name);
   program = program
     .command(`${params.name.toLowerCase()} ${formatFacetParams(params.facets)}`)

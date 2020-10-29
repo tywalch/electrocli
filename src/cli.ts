@@ -94,7 +94,6 @@ Error loading service "${name}": ${err.message} - Remove this entity using 'remo
   }
 }
 
-
 function queryCommand(program: commander.Command, service: ElectroInstance): void {
   for (let accessPattern in service.queries) {
     let instance = service.getInstance(accessPattern);
@@ -135,53 +134,6 @@ function scanCommand(program: commander.Command, service: ElectroInstance): void
   }
 }
 
-
-
-
-/** THIS CODE WILL NEST ENTITY ACCESS PATTERNS BENEATH THE ENTITY **/
-// function serviceCommand(program: commander.Command, service: ElectroInstance): void {
-//   let instanceSubCommands: Record<string, commander.Command> = {};
-//   for (let instance of service.instances) {
-//     if (instance.type === "entity") {
-//       let subCommand = new commander.Command(instance.name) //.description(`Queries and operations for ${instance.name}.`)
-//       instanceSubCommands[instance.name] = subCommand;
-//     }
-//   }
-//   for (let accessPattern in service.queries) {
-//     let instance = service.getInstance(accessPattern);
-//     let subCommand: commander.Command;
-//     if (instance && instance.type === "entity") {
-//       subCommand = instanceSubCommands[instance.name];
-//       executeQuery(subCommand, {
-//         name: accessPattern.toLowerCase(),
-//         description: `Query the entity "${instance.name}" by "${accessPattern}".`,
-//         query: service.queries[accessPattern],
-//         attributes: Object.values(instance.getAttributes()),
-//         facets: instance.getFacets(instance.getIndexName(accessPattern)).map(facet => {
-//           facet.type = "sk"
-//           return facet;
-//         }),
-//         actions: service.actions[instance.name]
-//       });
-//     } else if (instance && instance.type === "collection") {
-//       subCommand = program;
-//       executeQuery(subCommand, {
-//         name: accessPattern.toLowerCase(),
-//         description: `Query the collection "${accessPattern}".`,
-//         query: service.queries[accessPattern],
-//         attributes: Object.values(instance.getAttributes()),
-//         facets: instance.getFacets(instance.getIndexName(accessPattern)),
-//         actions: service.actions[instance.name]
-//       });
-//     } else {
-//       continue;
-//     }
-//   }
-//   for (let subCommand of Object.values(instanceSubCommands)) {
-//     program.addCommand(subCommand);
-//   }
-// }
-
 type QueryCommandParams = {name: string, query: QueryMethod, attributes: Attribute[], facets: Facet[], actions: {remove?: QueryMethod}};
 
 function validateQueryParams(params: InstanceCommandOptions): void {
@@ -192,8 +144,32 @@ function validateQueryParams(params: InstanceCommandOptions): void {
   }
 }
 
+async function removeRecords(data: object[], remove: QueryMethod, options: InstanceCommandOptions): Promise<object> {
+  let results: [string, object][] = await Promise.all(data.map((result: object) => {
+    return execute(remove(result), Object.assign({}, options))
+      .then((): [string, object] => {
+        return ["", result];
+      })
+      .catch((err: Error): [string, object] => {
+        return [err.message, result];
+      })
+  }));
+  let success = [];
+  let failure = [];
+  let errors = Array.from(new Set(results.map(([err]) => err))).filter(Boolean);
+  for (let [err, result] of results) {
+    if (err) {
+      failure.push(result);
+    } else {
+      success.push(result);
+    }
+  }
+  return {success, failure, errors};
+}
+
 function executeQuery(program: commander.Command, params: QueryCommandParams): commander.Command {
   let attributeNames = params.attributes.map(attribute => attribute.name);
+  let shouldRemove = !!(params.actions && params.actions.remove);
   program
     .option("-r, --raw", "Retrun raw field response.")
     .option("-p, --params", "Return docClient params as results.")
@@ -201,45 +177,24 @@ function executeQuery(program: commander.Command, params: QueryCommandParams): c
     .option("-l, --limit <number>", "Limit the number of results returned")
     .option(`-f, --filter <expression>`, `Supply a filter expression "<attribute> <operation> <value>". Available attributes include ${attributeNames.join(", ")}`, filter(attributeNames), []);
   
-  if (params.actions && params.actions.remove) {
+  if (shouldRemove) {
     program = program.option("-d, --delete", "Delete items returned from query");
   }
-
+  
   program.action(async (...args: any) => {
-      let options = args[args.length - 1];
+    try {
+      let options = args[args.length - 1] as InstanceCommandOptions;
       let facets = parseFacets(args, params.facets);
       validateQueryParams(options);
-      execute(params.query(facets), options)
-        .then(async data => {
-          if (options.delete && params.actions.remove !== undefined) {
-            let results = await Promise.all(data.map((result: object) => {
-              if (params.actions.remove) {
-              return execute(params.actions.remove(result), Object.assign({}, options))
-                .then(() => {
-                  return ["", result];
-                })
-                .catch((err: Error) => {
-                  return [err.message, result];
-                })
-              }
-            }));
-            results.forEach((results: any) => {
-              let [err, result]: [string, object] = results;
-              if (err) {
-                console.log(colors.red(JSON.stringify(result, null, 2)))
-              }
-            });
-          } else {
-            return data;
-          }
-        })
-        .then(data => {
-          if (data !== undefined) {
-            console.log(JSON.stringify(data, null, 2))
-          }
-        })
-        .catch(err => console.log(colors.red(err.message)));
-    });
+      let data: any = await execute(params.query(facets), options);
+      if (options.delete && params.actions.remove !== undefined) {
+        data = await removeRecords(data, params.actions.remove, options);
+      }
+      console.log(JSON.stringify(data || [], null, 2))
+    } catch(err) {
+      console.log(colors.red(err.message))
+    }
+  });
   return program;
 }
 
@@ -307,6 +262,7 @@ type InstanceCommandOptions = {
   table?: string;
   limit: string;
   filter: FilterOption[]
+  delete?: boolean;
 }
 
 type AttributeFilterOperation = Record<FilterOperation, (value1: string, value2?: string) => string>

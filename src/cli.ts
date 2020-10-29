@@ -98,26 +98,24 @@ Error loading service "${name}": ${err.message} - Remove this entity using 'remo
 function queryCommand(program: commander.Command, service: ElectroInstance): void {
   for (let accessPattern in service.queries) {
     let instance = service.getInstance(accessPattern);
-    if (instance && instance.type === "entity") {
-      executeQuery(program, {
-        name: accessPattern.toLowerCase(),
-        description: `Query the entity "${instance.name}" by "${accessPattern}".`,
-        query: service.queries[accessPattern],
-        attributes: Object.values(instance.getAttributes()),
-        facets: instance.getFacets(instance.getIndexName(accessPattern)),
-        actions: service.actions[instance.name]
-      });
-    } else if (instance && instance.type === "collection") {
-      executeQuery(program, {
-        name: accessPattern.toLowerCase(),
-        description: `Query the collection "${accessPattern}".`,
-        query: service.queries[accessPattern],
-        attributes: Object.values(instance.getAttributes()),
-        facets: instance.getFacets(instance.getIndexName(accessPattern)),
-        actions: service.actions[instance.name]
-      });
-    } else {
-      continue;
+    if (instance) {
+      let facets = instance.getFacets(instance.getIndexName(accessPattern));
+      let query = service.queries[accessPattern];
+      let name = accessPattern.toLowerCase();
+      let attributes = Object.values(instance.getAttributes());
+      let actions = service.actions[instance.name];
+      let description = "";
+      if (instance.type === "entity") {
+        description = `Query the entity "${instance.name}" by "${accessPattern}".`
+      } else if (instance.type === "collection") {
+        description = `Query the collection "${accessPattern}".`;
+      } else {
+        continue;
+      }
+      let command = program
+        .command(`${name} ${formatFacetParams(facets)}`)
+        .description(description)
+      executeQuery(command, {name, query, attributes, facets, actions});
     }
   }
 }
@@ -128,7 +126,6 @@ function scanCommand(program: commander.Command, service: ElectroInstance): void
     if (instance && instance.type === "entity") {
       executeQuery(program, {
         name: entity.toLowerCase(),
-        description: `Scan for the entity "${entity}".,`,
         query: service.scans[entity],
         attributes: Object.values(instance.getAttributes()),
         facets: [],
@@ -185,7 +182,7 @@ function scanCommand(program: commander.Command, service: ElectroInstance): void
 //   }
 // }
 
-type QueryCommandParams = {name: string, description: string, query: QueryMethod, attributes: Attribute[], facets: Facet[], actions: {remove?: QueryMethod}};
+type QueryCommandParams = {name: string, query: QueryMethod, attributes: Attribute[], facets: Facet[], actions: {remove?: QueryMethod}};
 
 function validateQueryParams(params: InstanceCommandOptions): void {
   let errors = [];
@@ -197,9 +194,7 @@ function validateQueryParams(params: InstanceCommandOptions): void {
 
 function executeQuery(program: commander.Command, params: QueryCommandParams): commander.Command {
   let attributeNames = params.attributes.map(attribute => attribute.name);
-  program = program
-    .command(`${params.name.toLowerCase()} ${formatFacetParams(params.facets)}`)
-    .description(params.description)
+  program
     .option("-r, --raw", "Retrun raw field response.")
     .option("-p, --params", "Return docClient params as results.")
     .option("-t, --table <table>", "Override table defined on model")

@@ -10,3 +10,5 @@ tslint.json
 typings.json
 typings
 dist/test
+
+.electro_config

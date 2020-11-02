@@ -81,9 +81,7 @@ export function loadQueries(program: commander.Command, serviceCommand: ServiceC
       reader = new InstanceReader(services[name].filePath);
       [,instance] = reader.get(services[name]);
     } catch(err) {
-      console.log(colors.red(`
-Error loading service "${name}": ${err.message} - Remove this entity using 'remove' command or use the 'add' command with the --force flag to update the file path. 
-`))
+      console.log(colors.red(`Error loading service "${name}": ${err.message} - Remove this entity using 'remove' command or use the 'add' command with the --force flag to update the file path.`))
     }
     if (instance === undefined || reader === undefined) {
       continue;
@@ -112,9 +110,11 @@ function queryCommand(program: commander.Command, service: ElectroInstance): voi
       } else {
         continue;
       }
+
       let command = program
         .command(`${name} ${formatFacetParams(facets)}`)
-        .description(description)
+        .description(description);
+
       executeQuery(command, {name, query, attributes, facets, actions});
     }
   }
@@ -191,7 +191,9 @@ function executeQuery(program: commander.Command, params: QueryCommandParams): c
       if (options.delete && params.actions.remove !== undefined) {
         data = await removeRecords(data, params.actions.remove, options);
       }
-      console.log(JSON.stringify(data || [], null, 2))
+      if (data) {
+        console.log(JSON.stringify(data, null, 2))
+      }
     } catch(err) {
       console.log(colors.red(err.message))
     }

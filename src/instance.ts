@@ -338,7 +338,7 @@ export class ElectroInstance {
       instances.push(instance);
       for (let accessPattern in electro.query) {
         /** Using `find` instead of `query` here to allow queries to turn into scans if not all values are provided **/
-        queries[accessPattern] = (facets: object) => electro.find(facets);
+        queries[accessPattern] = (facets: object) => electro.query[accessPattern](facets);
         // queries[accessPattern] = electro.query[accessPattern];
         /** -------------------------------------------------------------------------------------------------------- **/
       }
@@ -351,7 +351,7 @@ export class ElectroInstance {
         for (let accessPattern in entity.query) {
           /** Using `find` instead of `query` here to allow queries to turn into scans if not all values are provided **/
           // queries[accessPattern] = (facets: object) => entity.find(facets);
-          queries[accessPattern] = entity.query[accessPattern];
+          queries[accessPattern] = (facets: object) => entity.query[accessPattern](facets);
           /** -------------------------------------------------------------------------------------------------------- **/
         }
         actions[entity.model.entity] = {remove: (facets: object) => entity.delete(facets)};

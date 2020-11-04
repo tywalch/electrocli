@@ -21,26 +21,34 @@ function union(values: string[]) {
 
 type IndexType = {name: string, type: string};
 
-function buildIndexType(values: FacetDetail[], options: Handlebars.HelperOptions) {
+export function getFacetPermutations(values: FacetDetail[]): IndexType[][] {
+  if (!Array.isArray(values)) {
+    throw new Error("Invalid context");
+  }
+  let permutations: IndexType[][] = [];
+  for (let i = 0; i < values.length; i++) {
+    if (values[i].key === "pk" && values[i+1] !== undefined && values[i+1].key === "pk") {
+        continue;
+    }
+    let facets: IndexType[] = [];
+    for (let j = 0; j <= i; j++) {
+        let item = values[j];
+        facets.push({
+            name: item.name,
+            type: item.type
+        });
+    }
+    permutations.push(facets);
+  }
+  return permutations;
+}
+
+function buildIndexType(values: FacetDetail[]) {
   // [{type: "pk", facet: {name, type}}, {type: "sk", facet: {name, type}}]
   if (!Array.isArray(values)) {
       throw new Error("Invalid context");
   }
-  let tableIndex: IndexType[][] = [];
-  for (let i = 0; i < values.length; i++) {
-      if (values[i].key === "pk" && values[i+1] !== undefined && values[i+1].key === "pk") {
-          continue;
-      }
-      let facets: IndexType[] = [];
-      for (let j = 0; j <= i; j++) {
-          let item = values[j];
-          facets.push({
-              name: item.name,
-              type: item.type
-          });
-      }
-      tableIndex.push(facets);
-  }
+  let tableIndex = getFacetPermutations(values);
   return concatIndexType(tableIndex);
 }
 

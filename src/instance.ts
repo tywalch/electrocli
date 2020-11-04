@@ -40,10 +40,12 @@ export type Entity = {
     model: string
     version: string
   };
-  query: QueryRecord,
+  query: QueryRecord;
   get(val: any): any
-  delete: QueryMethod
-  scan: QueryOperation,
+  delete: QueryMethod;
+  create: QueryMethod;
+  patch: QueryMethod;
+  scan: QueryOperation;
   find: any
   model: {
     entity: string
@@ -307,6 +309,12 @@ export class CollectionInstance extends Instance {
 
 type QueryRecord = Record<string, QueryMethod>;
 
+export type InstanceActions = {
+  remove?: QueryMethod, 
+  create?: QueryMethod, 
+  patch?: QueryMethod
+};
+
 export class ElectroInstance {
   public name: string;
   public isService: boolean;
@@ -315,7 +323,7 @@ export class ElectroInstance {
   public electro: ElectroInstances;
   public queries: QueryRecord;
   public scans: QueryRecord;
-  public actions: Record<string, {remove?: QueryMethod}>
+  public actions: Record<string, InstanceActions>
 
   static isEntity(electro: ElectroInstances): electro is Entity {
     return electro._instance.description === "entity";
@@ -329,7 +337,7 @@ export class ElectroInstance {
     let name: string;
     let instances: Instance[] = [];
     let queries: QueryRecord = {};
-    let actions: Record<string, {remove?: QueryMethod}> = {};
+    let actions: Record<string, InstanceActions> = {};
     let scans: QueryRecord = {};
     if (ElectroInstance.isEntity(electro)) {
       name = electro.model.entity;
@@ -342,7 +350,11 @@ export class ElectroInstance {
         // queries[accessPattern] = electro.query[accessPattern];
         /** -------------------------------------------------------------------------------------------------------- **/
       }
-      actions[name] = {remove: (facets: object) => electro.delete(facets)};
+      actions[name] = {
+        remove: (facets: object) => electro.delete(facets), 
+        create: (facets: object) => electro.create(facets),
+        patch: (facets: object) => electro.patch(facets),
+      };
     } else if (ElectroInstance.isService(electro)) {
       name = electro.service.name;
       for (let entity of Object.values(electro.entities)) {
@@ -354,7 +366,11 @@ export class ElectroInstance {
           queries[accessPattern] = (facets: object) => entity.query[accessPattern](facets);
           /** -------------------------------------------------------------------------------------------------------- **/
         }
-        actions[entity.model.entity] = {remove: (facets: object) => entity.delete(facets)};
+        actions[entity.model.entity] = {
+          remove: (facets: object) => entity.delete(facets), 
+          create: (facets: object) => entity.create(facets),
+          patch: (facets: object) => entity.patch(facets),
+        };
         // queries.delete = entity.delete;
       }
       for (let collection of Object.keys(electro.collectionSchema)) {
@@ -382,10 +398,56 @@ export class ElectroInstance {
     this.isService = ElectroInstance.isService(electro);
   }
 
+  setName(name: string) {
+    this.name = name;
+  }
+
   getInstance(accessPattern: string): undefined | Instance {
     return this.instances.find(instance => instance.hasAccessPattern(accessPattern));
   }
+
+  eachQuery(cb: EachQueryCallback) {
+    for (let [accessPattern, query] of Object.entries(this.queries)) {
+      let instance = this.getInstance(accessPattern);
+      if (instance) {
+        cb(this.name, accessPattern, instance, query, this.actions[instance.name])
+      }
+    }
+    return this;
+  }
+
+  eachRemove(cb: EachQueryCallback) {
+    for (let instance of this.instances) {
+      let actions = this.actions[instance.name];
+      if (actions.remove) {
+        cb(this.name, instance.getAccessPatternName(), instance, actions.remove, actions);
+      }
+    }
+    return this;
+  }
+
+  eachCreate(cb: EachQueryCallback) {
+    for (let instance of this.instances) {
+      let actions = this.actions[instance.name];
+      if (actions.create) {
+        cb(this.name, instance.getAccessPatternName(), instance, actions.create, actions);
+      }
+    }
+    return this;
+  }
+
+  eachPatch(cb: EachQueryCallback) {
+    for (let instance of this.instances) {
+      let actions = this.actions[instance.name];
+      if (actions.patch) {
+        cb(this.name, instance.getAccessPatternName(), instance, actions.patch, actions);
+      }
+    }
+    return this;
+  }
 }
+
+export type EachQueryCallback = (serviceName: string, accessPatternName: string, entity: Instance, query: QueryMethod, actions: InstanceActions) => void;
 
 type InstanceQueryMethod = "get" | "delete" | "query" | "find";
 
@@ -399,6 +461,7 @@ export type OperationWhere = Record<FilterOperation, (attr: WhereAttribute, valu
 export type QueryConfiguration = {params?: {Table?: string, Limit?: number}};
 
 export type QueryOperation = {
+  set?: (facets: object) => QueryOperation;
   go: (config: QueryConfiguration) => Promise<object>;
   params: (config: QueryConfiguration) => object;
   filter: (cb: (attr: AttributeFilter) => string) => QueryOperation

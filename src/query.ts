@@ -1,63 +1,66 @@
-// import {Attribute} from "./instance";
-// const FilterOperationValues = ["=","<","<=","<>",">",">=","eq","gt","lt","gte","lte","between","begins","exists","notExists","contains","notContains"] as const;
-// const ConditionValues = ["and","or"] as const;
-// type FilterCondition = typeof ConditionValues[number];
-// type FilterOperation = typeof FilterOperationValues[number];
-// type FilterExpression = {attribute: string, operation: FilterOperation, value1?: any, value2?: any} | FilterCondition;
+import { QueryOperation } from "./instance";
 
-// enum SyntaxFormatKeyword {attributes, operations, conditions, value1, value2};
+export function getFilterParser(attributes: string[]) {
+  return (val: string, arr: FilterOption[] = []): FilterOption[] => {
+    let [name = "", operation, value1 = "", value2] = val.split(" ");
+    let attribute = attributes.find(attribute => attribute.toLowerCase() === name.toLowerCase());
+    if (name === undefined || operation === undefined || value1 === undefined) {
+      throw new Error(`Where expressions must be in the format of "<attribute> <operation> <value1> [value2]"`);
+    }
+    if (!attribute) {
+      throw new Error(`Where attribute ${name} is not a valid attribute. Valid attributes include ${attributes.join(", ")}.`);
+    }
+    if (!isOperation(operation)) {
+      throw new Error(`Where operation ${operation} is not a valid attribute. Valid attributes include ${FILTER_OPERATIONS.join(", ")}.`);
+    }
+    arr.push({attribute, operation, value1, value2});
+    return arr;
+  }
+}
 
-// const SyntaxFormats = [
-// 	[SyntaxFormatKeyword.attributes, SyntaxFormatKeyword.operations, SyntaxFormatKeyword.conditions],
-// 	[SyntaxFormatKeyword.attributes, SyntaxFormatKeyword.operations, SyntaxFormatKeyword.value1, SyntaxFormatKeyword.conditions],
-// 	[SyntaxFormatKeyword.attributes, SyntaxFormatKeyword.operations, SyntaxFormatKeyword.value1, SyntaxFormatKeyword.value2, SyntaxFormatKeyword.conditions],
-// ] as const;
+export type RequestFilters = string | string[];
 
-// function deconstruct(value: string = ""): string[] {
-//   return value
-//     .split(" ")
-//     .map(part => {
-//       if (typeof part === "string" && part.trim().length > 0) {
-//         return part.trim().toLowerCase();
-//       }
-//       return "";
-//     })
-//     .filter(Boolean);
-// }
+export function parseFilters(attributes: string[], filters: RequestFilters) {
+  let parser = getFilterParser(attributes);
+  if (typeof filters === "string") {
+    return parser(filters);
+  } else {
+    return filters.reduce((result: FilterOption[], value: string) => {
+      return parser(value, result)
+    }, []);
+  }
+}
 
+export function applyFilter(query: QueryOperation, filters: FilterOption[]): QueryOperation {
+  for (let filter of filters) {
+    query.where((attr, op) => {
+      if (filter.value2) {
+        return `${op[filter.operation](attr[filter.attribute], filter.value1, filter.value2)}`
+      } else if (filter.value1) {
+        return `${op[filter.operation](attr[filter.attribute], filter.value1)}`
+      } else {
+        return `${op[filter.operation](attr[filter.attribute])}`
+      }
+    })
+  }
+  return query;
+}
 
-// class ExpressionTester {
-//   private attributes: Attribute[];
-//   constructor(attributes: Attribute[]) {
-//     this.attributes = attributes;
-//   }
+const FILTER_OPERATIONS = ["eq","gt","lt","gte","lte","between","begins","exists","notExists","contains","notContains"] as const;
 
-//   test(keyword: SyntaxFormatKeyword, value?: string) {
-//     switch(keyword) {
-//       case SyntaxFormatKeyword.attributes:
-//         this.test
-//       case SyntaxFormatKeyword.conditions:
-//       case SyntaxFormatKeyword.operations:
-//       default:
-//     }
-//   }
-// }
+type FilterOperation = (typeof FILTER_OPERATIONS)[number];
 
-// function parse(expression: string, attributes: Attribute[]): FilterExpression[] {
-//   const tests = {
-//     [SyntaxFormatKeyword.attributes]: (value: string) => {
-//       return attributes.find(attr => attr.name.toLowerCase() === value);
-//     },
-//     [SyntaxFormatKeyword.operations]: (value: string) => {
-      
-//     }
-//   }
-//   let parts = deconstruct(expression);
-//   let expressions = [];
-//   let current = {};
-//   let format = 0;
-//   for (let i = 0; i < parts.length; i++) {
-//     let value = parts[i];
-//     let keywords = 
-//   }
-// }
+export type FilterOption = {
+  attribute: string;
+  operation: FilterOperation
+  value1: string;
+  value2?: string;
+}
+
+// type AttributeFilterOperation = Record<FilterOperation, (value1: string, value2?: string) => string>
+// type AttributeFilter = Record<string, AttributeFilterOperation>
+
+export function isOperation(operation: string): operation is FilterOperation {
+  return !!FILTER_OPERATIONS.find(op => op  === operation)
+}
+

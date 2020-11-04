@@ -1,8 +1,12 @@
 import colors from "colors";
-import commander from "commander";
+import commander, { description } from "commander";
 import {ReferenceStore, ReferenceConfiguration, AddReferenceConfiguration} from "./store";
 import {ElectroInstance, InstanceReader, QueryMethod, Attribute, Facet, QueryOperation, QueryConfiguration, Instance} from "./instance";
 import generate from "./generate";
+import serve from "./serve";
+import {getFilterParser, FilterOption, applyFilter} from "./query";
+
+const ConfigurationLocation = "./.electro_config" as const;
 
 export default function(program: commander.Command) {
   const query = new commander.Command("query").description("Query local instances that have been added to the CLI");
@@ -40,7 +44,7 @@ export default function(program: commander.Command) {
     .alias("rm")
     .description("Remove references added to the Electro CLI")
     .action((service: string) => {
-      const store = new ReferenceStore("./.electro_config");
+      const store = new ReferenceStore(ConfigurationLocation);
       const config = new ReferenceConfiguration(store);
       let display = config.remove(service);
       console.log(display);
@@ -51,29 +55,38 @@ export default function(program: commander.Command) {
     .alias("ls")
     .description("List all ElectroDB instances that have been imported into the Electro cli")
     .action(() => {
-      const store = new ReferenceStore("./.electro_config");
+      const store = new ReferenceStore(ConfigurationLocation);
       const config = new ReferenceConfiguration(store);
       let display = config.list();
       console.log(display);
     });
 
+  program
+    .command("serve <port>")
+    .description("Stand up a local http endpoint based on your models")
+    .action((port: number) => {
+      let services = getElectroInstances(ConfigurationLocation);
+      serve(port, services);
+    })
+
   try {
     loadQueries(query, queryCommand);
-    loadQueries(scan, scanCommand)
+    loadQueries(scan, scanCommand);
     program.addCommand(scan);
     program.addCommand(query);
     commander.parse(process.argv);
   } catch(err) {
-    console.log("Error:", err.message);
+    console.log("Error:", err.message, err);
     process.exit(1);
   }
 }
 
 type ServiceCommand = (program: commander.Command, service: ElectroInstance) => void;
 
-export function loadQueries(program: commander.Command, serviceCommand: ServiceCommand) {
-  const store = new ReferenceStore("./.electro_config");
+function getElectroInstances(location: string): ElectroInstance[] {
+  const store = new ReferenceStore(location);
   let services = store.get();
+  let instances: ElectroInstance[] = [];
   for (let name of Object.keys(services)) {
     let reader;
     let instance;
@@ -86,8 +99,17 @@ export function loadQueries(program: commander.Command, serviceCommand: ServiceC
     if (instance === undefined || reader === undefined) {
       continue;
     }
-    let service = new ElectroInstance(instance);
-    let command = new commander.Command(name.toLowerCase()) //.description(`Commands for the ${service.service} service.`);
+    let e = new ElectroInstance(instance);
+    e.setName(name);
+    instances.push(e);
+  }
+  return instances;
+}
+
+export function loadQueries(program: commander.Command, serviceCommand: ServiceCommand) {
+  let services = getElectroInstances(ConfigurationLocation);
+  for (let service of services) {
+    let command = new commander.Command(service.name.toLowerCase()) //.description(`Commands for the ${service.service} service.`);
     serviceCommand(command, service);
     program.addCommand(command);
   }
@@ -176,7 +198,7 @@ function executeQuery(program: commander.Command, params: QueryCommandParams): c
     .option("-p, --params", "Return docClient params as results.")
     .option("-t, --table <table>", "Override table defined on model")
     .option("-l, --limit <number>", "Limit the number of results returned")
-    .option(`-f, --filter <expression>`, `Supply a filter expression "<attribute> <operation> <value>". Available attributes include ${attributeNames.join(", ")}`, filter(attributeNames), []);
+    .option(`-f, --filter <expression>`, `Supply a filter expression "<attribute> <operation> <value>". Available attributes include ${attributeNames.join(", ")}`, getFilterParser(attributeNames), []);
   
   if (shouldRemove) {
     program = program.option("-d, --delete", "Delete items returned from query");
@@ -226,38 +248,16 @@ function formatFacetParams(facets: Facet[]): string {
 }
 
 
-const FILTER_OPERATIONS = ["eq","gt","lt","gte","lte","between","begins","exists","notExists","contains","notContains"] as const;
+// const FILTER_OPERATIONS = ["eq","gt","lt","gte","lte","between","begins","exists","notExists","contains","notContains"] as const;
 
-type FilterOperation = (typeof FILTER_OPERATIONS)[number];
+// type FilterOperation = (typeof FILTER_OPERATIONS)[number];
 
-type FilterOption = {
-  attribute: string;
-  operation: FilterOperation
-  value1: string;
-  value2?: string;
-}
-
-function isOperation(operation: string): operation is FilterOperation {
-  return !!FILTER_OPERATIONS.find(op => op  === operation)
-}
-
-function filter(attributes: string[]) {
-  return (val: string, arr: FilterOption[]): FilterOption[] => {
-    let [name = "", operation, value1 = "", value2] = val.split(" ");
-    let attribute = attributes.find(attribute => attribute.toLowerCase() === name.toLowerCase());
-    if (name === undefined || operation === undefined || value1 === undefined) {
-      throw new Error(`Where expressions must be in the format of "<attribute> <operation> <value1> [value2]"`);
-    }
-    if (!attribute) {
-      throw new Error(`Where attribute ${name} is not a valid attribute. Valid attributes include ${attributes.join(", ")}.`);
-    }
-    if (!isOperation(operation)) {
-      throw new Error(`Where operation ${operation} is not a valid attribute. Valid attributes include ${FILTER_OPERATIONS.join(", ")}.`);
-    }
-    arr.push({attribute, operation, value1, value2});
-    return arr;
-  }
-}
+// type FilterOption = {
+//   attribute: string;
+//   operation: FilterOperation
+//   value1: string;
+//   value2?: string;
+// }
 
 type InstanceCommandOptions = {
   raw?: boolean;
@@ -268,22 +268,9 @@ type InstanceCommandOptions = {
   delete?: boolean;
 }
 
-type AttributeFilterOperation = Record<FilterOperation, (value1: string, value2?: string) => string>
-type AttributeFilter = Record<string, AttributeFilterOperation>
-
 async function execute(query: QueryOperation, options: InstanceCommandOptions): Promise<any> {
-  for (let filter of options.filter) {
-    query.where((attr, op) => {
-      if (filter.value2) {
-        return `${op[filter.operation](attr[filter.attribute], filter.value1, filter.value2)}`
-      } else if (filter.value1) {
-        return `${op[filter.operation](attr[filter.attribute], filter.value1)}`
-      } else {
-        return `${op[filter.operation](attr[filter.attribute])}`
-      }
-    })
-  }
-  
+  query = applyFilter(query, options.filter);
+
   let config: QueryConfiguration = {};
   if (options.table) {
     config.params = config.params || {};

@@ -5,8 +5,9 @@ import {ElectroInstance, InstanceReader, QueryMethod, Attribute, Facet, QueryOpe
 import generate from "./generate";
 import serve from "./serve";
 import {getFilterParser, FilterOption, applyFilter} from "./query";
+import os from "os";
 
-const ConfigurationLocation = "./.electro_config" as const;
+const ConfigurationLocation = `${os.homedir()}/.electro_config`;
 
 export default function(program: commander.Command) {
   const query = new commander.Command("query").description("Query local instances that have been added to the CLI");
@@ -30,7 +31,7 @@ export default function(program: commander.Command) {
     .option("-r, --region <region>", "Specify a default aws region to use with this instance (model imports only)")
     .option("-o, --overwrite", "Overwrite existing tag if already exists")
     .action((filePath: string, {label, overwrite, table, endpoint, region}: AddReferenceConfiguration = {}) => {
-      const store = new ReferenceStore("./.electro_config");
+      const store = new ReferenceStore(ConfigurationLocation);
       const config = new ReferenceConfiguration(store);
       let instanceReader = new InstanceReader(filePath);
       let [, instance] = instanceReader.get({table, endpoint, region});
@@ -133,11 +134,8 @@ function queryCommand(program: commander.Command, service: ElectroInstance): voi
         continue;
       }
 
-      let command = program
-        .command(`${name} ${formatFacetParams(facets)}`)
-        .description(description);
-
-      executeQuery(command, {name, query, attributes, facets, actions});
+      let command = new commander.Command(`${name} ${formatFacetParams(facets)}`).description(description)
+      program.addCommand(executeQuery(command, {name, query, attributes, facets, actions}));
     }
   }
 }
@@ -146,13 +144,14 @@ function scanCommand(program: commander.Command, service: ElectroInstance): void
   for (let entity in service.scans) {
     let instance = service.instances.find(instance => instance.name === entity)
     if (instance && instance.type === "entity") {
-      executeQuery(program, {
+      let command =new commander.Command(entity.toLowerCase()).description(`Perform scan on ${entity} entities`);
+      program.addCommand(executeQuery(command, {
         name: entity.toLowerCase(),
         query: service.scans[entity],
         attributes: Object.values(instance.getAttributes()),
         facets: [],
         actions: service.actions[entity]
-      });
+      }));
     }
   }
 }

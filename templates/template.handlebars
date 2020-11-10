@@ -162,11 +162,11 @@ export declare namespace {{name}} {
     }
     
     class {{name}} {
-        get: (key: {{tableIndexName}}) => {go: GoRecord<Item>};
-        delete: (key: {{tableIndexName}}) => {go: GoRecord<Item>};
+        get: ((key: {{tableIndexName}}) => {go: GoRecord<Item>};
+        delete: ((key: {{tableIndexName}}) => {go: GoRecord<Item>}) | ((key: {{tableIndexName}}[]) => {go: GoRecord<Item[]>});
         update: (key: {{tableIndexName}}) => {set: SetRecord};
         patch: (key: {{tableIndexName}}) => {set: SetRecord};
-        put: (record: Item) => {go: GoRecord<Item>};
+        put: ((record: Item) => {go: GoRecord<Item>}) | ((record: Item[]) => {go: GoRecord<Item[]>});
         create: (record: Item) => {go: GoRecord<Item>};
         find: (record: Partial<Item>) => RecordsActionOptions;
         setIdentifier: (type: "model" | "table", value: string) => void

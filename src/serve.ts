@@ -113,7 +113,7 @@ function formatEndpoint(facets: {name: string, type: string}[], ...prefixes: str
   return [endpoint, ...facets.map(facet => `:${facet.name}`)].join("/");
 }
 
-export default function(port: number, electroInstances: ElectroInstance[]) {
+export default function serve(port: number, electroInstances: ElectroInstance[]) {
   if (electroInstances.length === 0) {
     console.log("No services found. Add some with 'electro add <filePath>'.")
   }

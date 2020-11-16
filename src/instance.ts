@@ -512,7 +512,7 @@ export class InstanceReader {
         const default_table_name = "your_table_name";
         return ["model", new Entity(instance, {table: table || default_table_name, client})];
       } catch(err) {
-        throw new Error("File must instance of Entity, Service, or Model.");
+        throw err
       }
       // placeholder for importing model;
     } else {

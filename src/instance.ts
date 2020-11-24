@@ -157,7 +157,6 @@ export abstract class Instance {
   }
 
   hasSK(): boolean {
-    // same;
     if (typeof this.__hasSK === "boolean") {
       return this.__hasSK;
     }

@@ -1,6 +1,6 @@
 {
   "name": "electrocli",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "description": "",
   "main": "dist/bin/index.js",
   "types": "dist/bin/index.d.ts",

@@ -44,7 +44,6 @@ export function getFacetPermutations(values: FacetDetail[]): IndexType[][] {
 }
 
 function buildIndexType(values: FacetDetail[]) {
-  // [{type: "pk", facet: {name, type}}, {type: "sk", facet: {name, type}}]
   if (!Array.isArray(values)) {
       throw new Error("Invalid context");
   }

@@ -44,9 +44,15 @@ export declare namespace {{name}} {
 
         type Callback = (attr: Attributes, op: Operations) => string;
     }
+    namespace Enums {
+        {{#each enums}}
+        export type {{name}} = {{{stringUnion values}}};
+
+    {{/each}}
+    }
 
     {{#each enums}}
-    type {{name}} = {{{stringUnion values}}};
+    export type {{name}} = {{{stringUnion values}}};
 
     {{/each}}
     type TableIndexNames = {{{stringUnion tableIndexFields}}};
@@ -72,14 +78,14 @@ export declare namespace {{name}} {
         {{/each}}
     }
     
-    type config = {
+    export type config = {
         raw?: boolean,
         params?: Object,
         includeKeys?: boolean,
         originalErr?: boolean,
     }
     
-    type NonReadOnlyProperties = {
+    export type NonReadOnlyProperties = {
         {{#each attributes}}
         {{#if readonly}}
         {{else}}
@@ -89,17 +95,23 @@ export declare namespace {{name}} {
     }
     
     {{#each indexes}}
-    type {{typeName}} = {{{ buildIndexType facets }}}
+    export type {{typeName}}Facets = {
+        {{#each facets}}
+        {{this.name}}: {{this.type}};
+        {{/each}}
+    }
+
+    export type {{typeName}} = {{{ buildIndexType facets }}}
 
     {{#if index}}
-    type {{typeName}}PK = {{{ buildIndexType (filterIndexType facets "pk") }}}
+    export type {{typeName}}PK = {{{ buildIndexType (filterIndexType facets "pk") }}}
 
-    type {{typeName}}SK = {{{ buildIndexType (filterIndexType facets "sk") }}}
+    export type {{typeName}}SK = {{{ buildIndexType (filterIndexType facets "sk") }}}
 
     {{/if}}
     {{/each}}
     // Figure out better typing for value here
-    type FilterOperations<T> = {
+    export type FilterOperations<T> = {
         gte: (value: T) => string
         gt: (value: T) => string
         lte: (value: T) => string
@@ -115,21 +127,21 @@ export declare namespace {{name}} {
         value: (value: T) => string
     };
     
-    type FilterAttributes<T extends Attributes> = {
+    export type FilterAttributes<T extends Attributes> = {
         [K in keyof T]: FilterOperations<T[K]>
     }
     
-    type GoRecord<T> = () => Promise<T>
+    export type GoRecord<T> = () => Promise<T>
 
-    type PageRecord = (page?: {{tableIndexName}} | null) => Promise<[Item | null, Item[]]> 
+    export type PageRecord = (page?: {{tableIndexName}} | null) => Promise<[Item | null, Item[]]> 
 
-    type ParamRecord = () => Object
+    export type ParamRecord = () => Object
 
-    type FilterRecords = (filter: <T extends Attributes>(record: FilterAttributes<T>) => string) => RecordsActionOptions
+    export type FilterRecords = (filter: <T extends Attributes>(record: FilterAttributes<T>) => string) => RecordsActionOptions
 
-    type WhereRecords = (where: Where.Callback) => RecordsActionOptions
+    export type WhereRecords = (where: Where.Callback) => RecordsActionOptions
 
-    type RecordsActionOptions = {
+    export type RecordsActionOptions = {
         go: GoRecord<Item[]>
         params: ParamRecord
         page: PageRecord
@@ -137,7 +149,7 @@ export declare namespace {{name}} {
         where: WhereRecords
     }
     
-    type SetRecordActionOptions = {
+    export type SetRecordActionOptions = {
         go: GoRecord<Item[]>
         params: ParamRecord
         filter: FilterRecords
@@ -146,9 +158,9 @@ export declare namespace {{name}} {
         where: WhereRecords
     }
     
-    type SetRecord = (properties: Partial<NonReadOnlyProperties>) => SetRecordActionOptions
+    export type SetRecord = (properties: Partial<NonReadOnlyProperties>) => SetRecordActionOptions
     
-    type QueryOperations<T> = {
+    export type QueryOperations<T> = {
         between: (skFacetsStart: T, skFacetsEnd: T) => RecordsActionOptions
         gt: (skFacets: T) => RecordsActionOptions
         gte: (skFacets: T) => RecordsActionOptions
@@ -161,8 +173,8 @@ export declare namespace {{name}} {
         where: WhereRecords
     }
     
-    class {{name}} {
-        get: ((key: {{tableIndexName}}) => {go: GoRecord<Item>};
+    export class {{name}} {
+        get: ((key: {{tableIndexName}}) => {go: GoRecord<Item>});
         delete: ((key: {{tableIndexName}}) => {go: GoRecord<Item>}) | ((key: {{tableIndexName}}[]) => {go: GoRecord<Item[]>});
         update: (key: {{tableIndexName}}) => {set: SetRecord};
         patch: (key: {{tableIndexName}}) => {set: SetRecord};
@@ -172,8 +184,8 @@ export declare namespace {{name}} {
         setIdentifier: (type: "model" | "table", value: string) => void
         query: {
             {{#each indexes}}
-            {{#if index}}
-            {{name}}: (key: {{typeName}}) => QueryOperations<{{typeName}}SK>
+            {{#if hasSK}}
+            {{name}}: <T extends {{typeName}}>(key: T) => QueryOperations<Omit<{{typeName}}Facets, keyof T>>
             {{else}}
             {{name}}: (key: {{typeName}}) => RecordsActionOptions,
             {{/if}}
@@ -282,14 +294,14 @@ export declare namespace {{name}}Collection {
 
     type PageRecord = (page?: Attributes | null) => Promise<[Attributes | null, Item[]]> 
 
-    type ParamRecord = () => Object
+    type ParamRecord = () => object
 
     type FilterRecords = (filter: <T extends Attributes>(record: FilterAttributes<T>) => string) => RecordsActionOptions
 
     type WhereRecords = (where: Where.Callback) => RecordsActionOptions
 
     type RecordsActionOptions = {
-        go: GoRecord<Item[]>
+        go: GoRecord<Item>
         params: ParamRecord
         page: PageRecord
         filter: FilterRecords

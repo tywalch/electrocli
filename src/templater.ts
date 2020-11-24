@@ -113,10 +113,11 @@ export default class InstanceTemplater extends ElectroInstance {
     let indexes = instance.getIndexes();
     return indexes.map(index => {
       let accessPattern = instance.getAccessPatternName(index.index)
+      let hasSK = !!instance.getFacets(index.index).find(facet => facet.type === "sk");
       return {
         typeName: this.formatAccessPatternName(accessPattern),
         name: accessPattern,
-        hasSK: instance.hasSK(),
+        hasSK: hasSK,
         index: index.index === "" ? undefined : accessPattern,
         facets: this.formatFacets(instance.getFacets(index.index), instance.getAttributes())
       }

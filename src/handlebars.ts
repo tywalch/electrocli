@@ -43,11 +43,24 @@ export function getFacetPermutations(values: FacetDetail[]): IndexType[][] {
   return permutations;
 }
 
-function buildIndexType(values: FacetDetail[]) {
+function buildIndexType(values: FacetDetail[], facetStart?: string) {
   if (!Array.isArray(values)) {
       throw new Error("Invalid context");
   }
-  let tableIndex = getFacetPermutations(values);
+  if (typeof facetStart !== "string") {
+    facetStart = values[0] && values[0].name;
+  }
+  let facets: FacetDetail[] = [];
+  let hasBegun = false;
+  for (let value of values) {
+    if (hasBegun) {
+      facets.push(value);
+    } else if (value.name === facetStart) {
+      facets.push(value);
+      hasBegun = true;
+    }
+  }
+  let tableIndex = getFacetPermutations(facets);
   return concatIndexType(tableIndex);
 }
 
@@ -75,11 +88,27 @@ function ne(this: typeof Handlebars, type: any, value: any, options: Handlebars.
     : options.fn(this);
 }
 
+function properCase(value: string) {
+  if (typeof value !== "string") {
+    throw new Error("Can only proper case strings.");
+  }
+  let cased = "";
+  for (let i = 0; i < value.length; i++) {
+    if (i === 0) {
+      cased += value[i].toUpperCase()
+    } else {
+      cased += value[i];
+    }
+  }
+  return cased;
+}
+
 Handlebars.registerHelper({
   ne,
   eq,
   union,
   prefix,
+  properCase,
   stringUnion,
   buildIndexType,
   concatIndexType,

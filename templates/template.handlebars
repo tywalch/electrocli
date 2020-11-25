@@ -102,6 +102,16 @@ export declare namespace {{name}} {
     }
 
     export type {{typeName}} = {{{ buildIndexType facets }}}
+    
+    {{#each facets}}
+    export type {{../typeName}}{{properCase this.name}}Remainders = {{{ buildIndexType ../facets this.name}}}
+    {{/each}}
+
+    type {{typeName}}RemainingFacets<T extends {{typeName}}> = 
+        {{#each facets}}
+        Omit<{{../typeName}}Facets, keyof T> extends {{../typeName}}{{properCase this.name}}Remainders ? Required<{{../typeName}}{{properCase this.name}}Remainders> :
+        {{/each}}
+        never;
 
     {{#if index}}
     export type {{typeName}}PK = {{{ buildIndexType (filterIndexType facets "pk") }}}
@@ -185,7 +195,7 @@ export declare namespace {{name}} {
         query: {
             {{#each indexes}}
             {{#if hasSK}}
-            {{name}}: <T extends {{typeName}}>(key: T) => QueryOperations<Omit<{{typeName}}Facets, keyof T>>
+            {{name}}: <T extends {{typeName}}>(key: T) => QueryOperations<{{typeName}}RemainingFacets<T>>
             {{else}}
             {{name}}: (key: {{typeName}}) => RecordsActionOptions,
             {{/if}}

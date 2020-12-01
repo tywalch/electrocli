@@ -273,7 +273,7 @@ async function execute(query: QueryOperation, options: InstanceCommandOptions): 
   let config: QueryConfiguration = {};
   if (options.table) {
     config.params = config.params || {};
-    config.params.Table = options.table;
+    config.params.TableName = options.table;
   }
   if (options.limit) {
     config.params = config.params || {};

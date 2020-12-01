@@ -1,5 +1,5 @@
 import colors from "colors";
-import commander, { description } from "commander";
+import commander from "commander";
 import {ReferenceStore, ReferenceConfiguration, AddReferenceConfiguration} from "./store";
 import {ElectroInstance, InstanceReader, QueryMethod, Attribute, Facet, QueryOperation, QueryConfiguration, Instance} from "./instance";
 import generate from "./generate";
@@ -10,8 +10,6 @@ import os from "os";
 const ConfigurationLocation = `${os.homedir()}/.electro_config`;
 
 export default function(program: commander.Command) {
-  const query = new commander.Command("query").description("Query local instances that have been added to the CLI");
-  const scan = new commander.Command("scan").description("Scan for local instances that have been added to the CLI");
 
   program
     .command("typedef <filepath>")
@@ -68,14 +66,14 @@ export default function(program: commander.Command) {
     .action((port: number) => {
       let services = getElectroInstances(ConfigurationLocation);
       serve(port, services);
-    })
+    });
 
   try {
-    loadQueries(query, queryCommand);
-    loadQueries(scan, scanCommand);
+    let query = createQueryCommand("query", "Query local instances that have been added to the CLI", queryCommand);
+    let scan = createQueryCommand("scan", "Scan for local instances that have been added to the CLI", scanCommand);
     program.addCommand(scan);
     program.addCommand(query);
-    commander.parse(process.argv);
+    program.parse(process.argv);
   } catch(err) {
     console.log("Error:", err.message, err);
     process.exit(1);
@@ -107,13 +105,15 @@ function getElectroInstances(location: string): ElectroInstance[] {
   return instances;
 }
 
-export function loadQueries(program: commander.Command, serviceCommand: ServiceCommand) {
+export function createQueryCommand(name: string, description: string, serviceCommand: ServiceCommand) {
+  let program = new commander.Command(name).description(description);
   let services = getElectroInstances(ConfigurationLocation);
   for (let service of services) {
     let command = new commander.Command(service.name.toLowerCase()) //.description(`Commands for the ${service.service} service.`);
     serviceCommand(command, service);
     program.addCommand(command);
   }
+  return program;
 }
 
 function queryCommand(program: commander.Command, service: ElectroInstance): void {
@@ -134,8 +134,8 @@ function queryCommand(program: commander.Command, service: ElectroInstance): voi
         continue;
       }
 
-      let command = new commander.Command(`${name} ${formatFacetParams(facets)}`).description(description)
-      program.addCommand(executeQuery(command, {name, query, attributes, facets, actions}));
+      let command = program.command(`${name} ${formatFacetParams(facets)}`).description(description);
+      executeQuery(command, {name, query, attributes, facets, actions});
     }
   }
 }
@@ -144,14 +144,14 @@ function scanCommand(program: commander.Command, service: ElectroInstance): void
   for (let entity in service.scans) {
     let instance = service.instances.find(instance => instance.name === entity)
     if (instance && instance.type === "entity") {
-      let command =new commander.Command(entity.toLowerCase()).description(`Perform scan on ${entity} entities`);
-      program.addCommand(executeQuery(command, {
+      let command = program.command(entity.toLowerCase()).description(`Perform scan on ${entity} entities`);
+      executeQuery(command, {
         name: entity.toLowerCase(),
         query: service.scans[entity],
         attributes: Object.values(instance.getAttributes()),
         facets: [],
         actions: service.actions[entity]
-      }));
+      });
     }
   }
 }

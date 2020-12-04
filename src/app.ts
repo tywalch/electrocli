@@ -119,7 +119,7 @@ function queryCommand(program: commander.Command, service: ElectroInstance): voi
 
 function scanCommand(program: commander.Command, service: ElectroInstance): void {
   for (let entity in service.scans) {
-    let instance = service.instances.find(instance => instance.name === entity)
+    let instance = service.instances.find(instance => instance.name === entity);
     if (instance && instance.type === "entity") {
       let command = program.command(entity.toLowerCase()).description(`Perform scan on ${entity} entities`);
       executeQuery(command, {

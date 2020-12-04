@@ -5,7 +5,7 @@ import path from "path";
 
 const TEMPLATE_FILE = "../../templates/template.handlebars";
 
-function modifyExtension<T>(filePath: string, extension: string) {
+function modifyExtension(filePath: string, extension: string) {
   let file = new RemoteFile(filePath);
   return path.resolve(`${file.dir()}/${file.name()}.${extension}`);
 }

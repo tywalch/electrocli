@@ -1,12 +1,12 @@
 import express from "express";
 import bodyParser from "body-parser";
-import {ElectroInstance, Facet, Instance, InstanceActions, QueryMethod} from "./instance";
+import {ElectroInstance, Facet, Instance, QueryMethod} from "./instance";
 import {getFacetPermutations} from "./handlebars";
 import {applyFilter, parseFilters, RequestFilters} from "./query";
 
 const app = express();
 
-function queryController(name: string, accessPattern: string, entity: Instance, query: QueryMethod, actions: InstanceActions) {
+function queryController(name: string, accessPattern: string, entity: Instance, query: QueryMethod) {
   let index = entity.getIndexName(accessPattern);
   let facets: Facet[] = entity.getFacets(index);
   let facetDetail = facets.map(facet => ({key: facet.type, name: facet.name, type: facet.type}));
@@ -14,7 +14,7 @@ function queryController(name: string, accessPattern: string, entity: Instance, 
   for (let permutation of getFacetPermutations(facetDetail)) {
     let endpoint = formatEndpoint(permutation, name, accessPattern)
     console.log("   GET", endpoint);
-    app.get(endpoint, async (req, res, next) => {
+    app.get(endpoint, async (req, res) => {
       try {
         let filters = (req.query.filter || []) as RequestFilters;
         let parsed = parseFilters(attributes, filters);
@@ -25,7 +25,7 @@ function queryController(name: string, accessPattern: string, entity: Instance, 
         } else {
           data = await applyFilter(query(req.params), parsed).go({}); 
         }
-        return res.send({data, message: ""});
+        res.send({data, message: ""});
       } catch(err) {
         res.status(500).send({
           message: err.message,
@@ -36,12 +36,12 @@ function queryController(name: string, accessPattern: string, entity: Instance, 
   }
 }
 
-function patchController(name: string, accessPattern: string, entity: Instance, patch: QueryMethod, actions: InstanceActions) {
+function patchController(name: string, accessPattern: string, entity: Instance, patch: QueryMethod) {
   let facets = entity.getFacets() || [];
   let attributes = Object.keys(entity.getAttributes());
   let endpoint = formatEndpoint(facets, name, accessPattern);
   console.log("   PUT", endpoint);
-  app.put(endpoint, async (req, res, next) => {
+  app.put(endpoint, async (req, res) => {
     try {
       let filters = (req.query.filter || []) as RequestFilters;
       let parsed = parseFilters(attributes, filters);
@@ -53,7 +53,7 @@ function patchController(name: string, accessPattern: string, entity: Instance, 
       }
       query = applyFilter(query, parsed);
       await query.go({});
-      return res.send({data, message});
+      res.send({data, message});
     } catch(err) {
       res.status(500).send({
         message: err.message,
@@ -63,17 +63,17 @@ function patchController(name: string, accessPattern: string, entity: Instance, 
   });
 }
 
-function createController(name: string, accessPattern: string, entity: Instance, create: QueryMethod, actions: InstanceActions) {
+function createController(name: string, accessPattern: string, entity: Instance, create: QueryMethod) {
   let attributes = Object.keys(entity.getAttributes());
   let endpoint = formatEndpoint([], name, accessPattern);
   console.log("  POST", endpoint);
-  app.post(endpoint, async (req, res, next) => {
+  app.post(endpoint, async (req, res) => {
     try {
       let filters = (req.query.filter || []) as RequestFilters;
       let parsed = parseFilters(attributes, filters);
       let data = await applyFilter(create(req.body), parsed).go({});
       let message = "Created!";
-      return res.send({data, message});
+      res.send({data, message});
     } catch(err) {
       res.status(500).send({
         message: err.message,
@@ -83,19 +83,19 @@ function createController(name: string, accessPattern: string, entity: Instance,
   });
 }
 
-function deleteController(name: string, accessPattern: string, entity: Instance, remove: QueryMethod, actions: InstanceActions) {
+function deleteController(name: string, accessPattern: string, entity: Instance, remove: QueryMethod) {
   let facets = entity.getFacets() || [];
   let attributes = Object.keys(entity.getAttributes());
   let endpoint = formatEndpoint(facets, name, accessPattern);
   console.log("DELETE", endpoint);
-  app.delete(endpoint, async (req, res, next) => {
+  app.delete(endpoint, async (req, res) => {
     try {
       let filters = (req.query.filter || []) as RequestFilters;
       let parsed = parseFilters(attributes, filters);
       let data = req.params;
       let message = "Removed!";
       await applyFilter(remove(req.params), parsed).go({});
-      return res.send({data, message})
+      res.send({data, message})
     } catch(err) {
       res.status(500).send({
         message: err.message,
@@ -106,7 +106,7 @@ function deleteController(name: string, accessPattern: string, entity: Instance,
 }
 
 function formatEndpoint(facets: {name: string, type: string}[], ...prefixes: string[]) {
-  let endpoint = ""
+  let endpoint = "";
   for (let prefix of prefixes) {
     endpoint += `/${prefix.toLowerCase()}`;
   }
@@ -125,11 +125,19 @@ export default function serve(port: number, electroInstances: ElectroInstance[])
   for (let service of electroInstances) {
     console.log("");
     service
-      .eachCreate(createController)
-      .eachRemove(deleteController)
-      .eachPatch(patchController)
       .eachQuery(queryController)
+      .eachCreate(createController)
+      .eachPatch(patchController)
+      .eachRemove(deleteController);
   }
+  
+  app.use((req, res) => {
+    console.log(req.url)
+    res.status(404).send({
+      data: {},
+      message: "A matching access pattern couldn't be found. Verify your endpoint is correct and/or the method you are using."
+    });
+  });
 
   app.listen(app.get("port"), () => {
     console.log("");

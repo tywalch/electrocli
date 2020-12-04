@@ -341,7 +341,7 @@ export class ElectroInstance {
     if (ElectroInstance.isEntity(electro)) {
       name = electro.model.entity;
       let instance = new EntityInstance(name, electro.model.service, electro)
-      scans[name] = (facets: object) => electro.scan;
+      scans[name] = () => electro.scan;
       instances.push(instance);
       for (let accessPattern in electro.query) {
         /** Using `find` instead of `query` here to allow queries to turn into scans if not all values are provided **/
@@ -358,7 +358,7 @@ export class ElectroInstance {
       name = electro.service.name;
       for (let entity of Object.values(electro.entities)) {
         instances.push(new EntityInstance(entity.model.entity, electro.service.name, entity));
-        scans[entity.model.entity] = (facets: object) => entity.scan;
+        scans[entity.model.entity] = () => entity.scan;
         for (let accessPattern in entity.query) {
           /** Using `find` instead of `query` here to allow queries to turn into scans if not all values are provided **/
           // queries[accessPattern] = (facets: object) => entity.find(facets);
@@ -418,7 +418,7 @@ export class ElectroInstance {
   eachRemove(cb: EachQueryCallback) {
     for (let instance of this.instances) {
       let actions = this.actions[instance.name];
-      if (actions.remove) {
+      if (actions && actions.remove) {
         cb(this.name, instance.getAccessPatternName(), instance, actions.remove, actions);
       }
     }
@@ -428,7 +428,7 @@ export class ElectroInstance {
   eachCreate(cb: EachQueryCallback) {
     for (let instance of this.instances) {
       let actions = this.actions[instance.name];
-      if (actions.create) {
+      if (actions && actions.create) {
         cb(this.name, instance.getAccessPatternName(), instance, actions.create, actions);
       }
     }
@@ -438,7 +438,7 @@ export class ElectroInstance {
   eachPatch(cb: EachQueryCallback) {
     for (let instance of this.instances) {
       let actions = this.actions[instance.name];
-      if (actions.patch) {
+      if (actions && actions.patch) {
         cb(this.name, instance.getAccessPatternName(), instance, actions.patch, actions);
       }
     }
@@ -447,8 +447,6 @@ export class ElectroInstance {
 }
 
 export type EachQueryCallback = (serviceName: string, accessPatternName: string, entity: Instance, query: QueryMethod, actions: InstanceActions) => void;
-
-type InstanceQueryMethod = "get" | "delete" | "query" | "find";
 
 type AttributeFilterOperation = Record<FilterOperation, (value1: string, value2?: string) => string>
 type AttributeFilter = Record<string, AttributeFilterOperation>

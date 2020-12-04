@@ -1,5 +1,4 @@
 import Handlebars from "./handlebars";
-import fs from "fs";
 import {ElectroInstance, ElectroInstances, IndexTypes, InstanceAccessType, Instance, Facet, Attribute, ElectroInstanceType} from "./instance";
 import {LocalFile} from "./files";
 

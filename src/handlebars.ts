@@ -5,11 +5,13 @@ function prefix(values: string[], prefix: string) {
   return values.map(value => `${prefix || ""}${value}`);
 }
 
-function stringUnion(values: string[], includeQuotes: boolean, options: Handlebars.HelperOptions) {
+function stringUnion(values: string[], includeQuotes: boolean) {
   if (!Array.isArray(values)) {
       throw new Error("Invalid context");
   }
-  return values.map(value => `"${value}"`).join(" | ");
+  return values
+    .map(value => includeQuotes ? `"${value}"` : value)
+    .join(" | ");
 }
 
 function union(values: string[]) {

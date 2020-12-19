@@ -5,8 +5,8 @@ if [ -z "$message" ]; then
     exit 1
 fi
 tsc
-git add *
 node ./bump
+git add *
 git commit -m "$message"
 git push
 npm publish

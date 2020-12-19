@@ -1,11 +1,11 @@
 import Handlebars from "handlebars";
 import {FacetDetail} from "./templater";
 
-function prefix(values: string[], prefix: string) {
+export function prefix(values: string[], prefix: string) {
   return values.map(value => `${prefix || ""}${value}`);
 }
 
-function stringUnion(values: string[], includeQuotes: boolean) {
+export function stringUnion(values: string[], includeQuotes: boolean) {
   if (!Array.isArray(values)) {
       throw new Error("Invalid context");
   }
@@ -14,7 +14,7 @@ function stringUnion(values: string[], includeQuotes: boolean) {
     .join(" | ");
 }
 
-function union(values: string[]) {
+export function union(values: string[]) {
   if (!Array.isArray(values)) {
     throw new Error("Invalid context");
   }
@@ -45,7 +45,7 @@ export function getFacetPermutations(values: FacetDetail[]): IndexType[][] {
   return permutations;
 }
 
-function buildIndexType(values: FacetDetail[], facetStart?: string) {
+export function buildIndexType(values: FacetDetail[], facetStart?: string) {
   if (!Array.isArray(values)) {
       throw new Error("Invalid context");
   }
@@ -66,31 +66,31 @@ function buildIndexType(values: FacetDetail[], facetStart?: string) {
   return concatIndexType(tableIndex);
 }
 
-function concatIndexType(values: IndexType[][] = []) {
+export function concatIndexType(values: IndexType[][] = []) {
   return values.map(facets => {
       return `{ ${facets.map(facet => `${facet.name}: ${facet.type}`).join(", ")} }`
   }).join(" | ") || "{}";
 }
 
-function filterIndexType(values: FacetDetail[], key: 'pk' | 'sk' | 'all') {
+export function filterIndexType(values: FacetDetail[], key: 'pk' | 'sk' | 'all') {
   return values.filter(indexType => {
       return key === "all" || indexType.key === key
   })
 }
 
-function eq(this: typeof Handlebars, type: any, value: any, options: Handlebars.HelperOptions) {
+export function eq(this: typeof Handlebars, type: any, value: any, options: Handlebars.HelperOptions) {
   return type === value
     ? options.fn(this)
     : options.inverse(this);
 }
 
-function ne(this: typeof Handlebars, type: any, value: any, options: Handlebars.HelperOptions) {
+export function ne(this: typeof Handlebars, type: any, value: any, options: Handlebars.HelperOptions) {
   return type === value
     ? options.inverse(this)
     : options.fn(this);
 }
 
-function properCase(value: string) {
+export function properCase(value: string) {
   if (typeof value !== "string") {
     throw new Error("Can only proper case strings.");
   }

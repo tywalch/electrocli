@@ -26,7 +26,3 @@ export default function generate(inFile: string, outFile: string = "") {
     process.exit(1);
   }
 }
-
-// todo: Item needs to be more specific for Instance implementations so that the `type` of the item attributes can make use of "enum";
-
-// main(process.argv[2]);

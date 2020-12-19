@@ -14,9 +14,17 @@
   "author": "Tyler W. Walch",
   "license": "ISC",
   "devDependencies": {
+    "@istanbuljs/nyc-config-typescript": "^1.0.1",
+    "@types/chai": "^4.2.12",
     "@types/commander": "^2.12.2",
     "@types/handlebars": "^4.1.0",
-    "@types/node": "^14.14.0"
+    "@types/mocha": "^8.0.4",
+    "@types/node": "^14.14.0",
+    "chai": "^4.2.0",
+    "coveralls": "^3.1.0",
+    "mocha": "^8.2.1",
+    "mocha-lcov-reporter": "^1.3.0",
+    "nyc": "^15.1.0"
   },
   "keywords": [
     "electrodb",

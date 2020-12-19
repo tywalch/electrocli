@@ -1,5 +1,5 @@
-import { expect } from 'chai';
-import helpers from "../src/handlebars";
+// import { expect } from 'chai';
+// import helpers from "../src/handlebars";
 
 describe("Handlebars helpers", () => {
   describe("prefix", () => {

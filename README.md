@@ -1,4 +1,4 @@
-# Electro CLI
+# ElectroCLI
 
 ## Install
 Install globally

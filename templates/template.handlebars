@@ -145,27 +145,33 @@ export declare namespace {{name}} {
 
     export type PageRecord = (page?: {{tableIndexName}} | null) => Promise<[Item | null, Item[]]> 
 
-    export type ParamRecord = () => Object
+    export type ParamRecord = () => object
 
     export type FilterRecords = (filter: <T extends Attributes>(record: FilterAttributes<T>) => string) => RecordsActionOptions
 
     export type WhereRecords = (where: Where.Callback) => RecordsActionOptions
 
     export type RecordsActionOptions = {
-        go: GoRecord<Item[]>
-        params: ParamRecord
-        page: PageRecord
-        filter: FilterRecords
-        where: WhereRecords
+        go: GoRecord<Item[]>;
+        params: ParamRecord;
+        page: PageRecord;
+        filter: FilterRecords;
+        where: WhereRecords;
     }
+
+    export type SingleRecordOperationOptions<T> = {
+        go: GoRecord<T>;
+        params: ParamRecord;
+        where: WhereRecords;
+    };
     
     export type SetRecordActionOptions = {
-        go: GoRecord<Item[]>
-        params: ParamRecord
-        filter: FilterRecords
-        page: PageRecord
-        set: SetRecord
-        where: WhereRecords
+        go: GoRecord<Item>;
+        params: ParamRecord;
+        filter: FilterRecords;
+        page: PageRecord;
+        set: SetRecord;
+        where: WhereRecords;
     }
     
     export type SetRecord = (properties: Partial<NonReadOnlyProperties>) => SetRecordActionOptions
@@ -184,16 +190,16 @@ export declare namespace {{name}} {
     }
     
     export class {{name}} {
-        get(key: {{tableIndexName}}Facets): {go: GoRecord<Item>}
-        delete(key: {{tableIndexName}}Facets): {go: GoRecord<Item>}
-        delete(key: {{tableIndexName}}Facets[]): {go: GoRecord<Item[]>}
-        update(key: {{tableIndexName}}Facets): {set: SetRecord}
-        patch(key: {{tableIndexName}}Facets): {set: SetRecord}
-        put(record: Item): {go: GoRecord<Item>}
-        put(record: Item[]): {go: GoRecord<Item[]>}
-        create(record: Item): {go: GoRecord<Item>}
-        find(record: Partial<Item>): RecordsActionOptions
-        setIdentifier(type: "model" | "table", value: string): void
+        get(key: {{tableIndexName}}Facets): SingleRecordOperationOptions<Item>;
+        delete(key: {{tableIndexName}}Facets): SingleRecordOperationOptions<Item>;
+        delete(key: {{tableIndexName}}Facets[]): SingleRecordOperationOptions<Item>;
+        update(key: {{tableIndexName}}Facets): {set: SetRecord};
+        patch(key: {{tableIndexName}}Facets): {set: SetRecord};
+        put(record: Item): SingleRecordOperationOptions<Item>;
+        put(record: Item[]): SingleRecordOperationOptions<Item>;
+        create(record: Item): SingleRecordOperationOptions<Item>;
+        find(record: Partial<Item>): RecordsActionOptions;
+        setIdentifier(type: "model" | "table", value: string): void;
         query: {
             {{#each indexes}}
             {{#if hasSK}}

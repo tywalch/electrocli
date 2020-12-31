@@ -1,53 +1,53 @@
 {{#each instances}}
 {{#eq type "entity"}}
-export declare namespace {{name}} {
+export declare namespace {{pascal name}} {
     namespace Where {
         {{#each attributes}}
-        const {{name}}Symbol: unique symbol;
+        const {{pascal name}}Symbol: unique symbol;
 
         {{/each}}
         {{#each attributes}}
-        interface {{name}} {
-            [{{name}}Symbol]: void;
+        interface {{pascal name}} {
+            [{{pascal name}}Symbol]: void;
         }
 
         {{/each}}
-        type AttributeName = {{{union attributeNames}}}
+        type AttributeName = {{{union (pascal attributeNames)}}}
 
         type AttributeType<T extends AttributeName> =
             {{#each attributes}}
-            T extends {{name}} ? {{type}} :
+            T extends {{pascal name}} ? {{type}} :
             {{/each}}
             never;
         
         type Operations = {
-            eq: <T extends AttributeName>(attr: T, value: AttributeType<T>) => string,
-            gt: <T extends AttributeName>(attr: T, value: AttributeType<T>) => string,
-            lt: <T extends AttributeName>(attr: T, value: AttributeType<T>) => string,
-            gte: <T extends AttributeName>(attr: T, value: AttributeType<T>) => string,
-            lte: <T extends AttributeName>(attr: T, value: AttributeType<T>) => string,
-            between: <T extends AttributeName>(attr: T, value: AttributeType<T>, value2: AttributeType<T>) => string,
-            begins: <T extends AttributeName>(attr: T, value: AttributeType<T>) => string,
-            exists: <T extends AttributeName>(attr: T) => string,
-            notExists: <T extends AttributeName>(attr: T) => string,
-            contains: <T extends AttributeName>(attr: T, value: AttributeType<T>) => string,
-            notContains: <T extends AttributeName>(attr: T, value: AttributeType<T>) => string,
-            value: <T extends AttributeName>(attr: T, value: AttributeType<T>) => string,
-            name: <T extends AttributeName>(attr: T) => string,
+            eq: <T extends AttributeName>(attr: T, value: AttributeType<T>) => string;
+            gt: <T extends AttributeName>(attr: T, value: AttributeType<T>) => string;
+            lt: <T extends AttributeName>(attr: T, value: AttributeType<T>) => string;
+            gte: <T extends AttributeName>(attr: T, value: AttributeType<T>) => string;
+            lte: <T extends AttributeName>(attr: T, value: AttributeType<T>) => string;
+            between: <T extends AttributeName>(attr: T, value: AttributeType<T>, value2: AttributeType<T>) => string;
+            begins: <T extends AttributeName>(attr: T, value: AttributeType<T>) => string;
+            exists: <T extends AttributeName>(attr: T) => string;
+            notExists: <T extends AttributeName>(attr: T) => string;
+            contains: <T extends AttributeName>(attr: T, value: AttributeType<T>) => string;
+            notContains: <T extends AttributeName>(attr: T, value: AttributeType<T>) => string;
+            value: <T extends AttributeName>(attr: T, value: AttributeType<T>) => string;
+            name: <T extends AttributeName>(attr: T) => string;
         };
 
         type Attributes = {
             {{#each attributes}}
-            {{name}}: {{name}};
+            {{name}}: {{pascal name}};
             {{/each}}
         }
 
         type Callback = (attr: Attributes, op: Operations) => string;
     }
-    namespace Enums {
-        {{#each enums}}
-        export type {{name}} = {{{stringUnion values}}};
 
+    namespace Enums {
+    {{#each enums}}
+        export type {{name}} = {{{stringUnion values}}};
     {{/each}}
     }
 
@@ -59,153 +59,153 @@ export declare namespace {{name}} {
     
     export type Item = {
     {{#each attributes}}
-        {{name}}{{#if optional}}?{{/if}}: {{type}}
+        {{name}}{{#if optional}}?{{/if}}: {{type}};
     {{/each}}
     }
     
     export type Attributes = {
     {{#each attributes}}
-        {{name}}: {{type}}
+        {{name}}: {{type}};
     {{/each}}
     }
     
     export type RawItem = {
-        {{#each keyNames}}
-        {{this}}: string
-        {{/each}}
-        {{#each attributes}}
-        {{name}}{{#if optional}}?{{/if}}: {{type}}
-        {{/each}}
+    {{#each keyNames}}
+        {{this}}: string;
+    {{/each}}
+    {{#each attributes}}
+        {{name}}{{#if optional}}?{{/if}}: {{type}};
+    {{/each}}
     }
     
     export type config = {
-        raw?: boolean,
-        params?: Object,
-        includeKeys?: boolean,
-        originalErr?: boolean,
+        raw?: boolean;
+        params?: object;
+        includeKeys?: boolean;
+        originalErr?: boolean;
     }
     
     export type NonReadOnlyProperties = {
-        {{#each attributes}}
+    {{#each attributes}}
         {{#if readonly}}
         {{else}}
-        {{name}}{{#if optional}}?{{/if}}: {{type}}
+        {{name}}{{#if optional}}?{{/if}}: {{type}};
         {{/if}}
-        {{/each}}
+    {{/each}}
     }
     
     {{#each indexes}}
-    export type {{typeName}}Facets = {
-        {{#each facets}}
+    export type {{pascal typeName}}Facets = {
+    {{#each facets}}
         {{this.name}}: {{this.type}};
-        {{/each}}
+    {{/each}}
     }
 
-    export type {{typeName}} = {{{ buildIndexType facets }}}
+    export type {{pascal typeName}} = {{{ buildIndexType facets }}};
     
     {{#each facets}}
-    export type {{../typeName}}{{properCase this.name}}Remainders = {{{ buildIndexType ../facets this.name}}}
+    export type {{pascal ../typeName}}{{pascal this.name}}Remainders = {{{ buildIndexType ../facets this.name}}};
     {{/each}}
 
-    type {{typeName}}RemainingFacets<T extends {{typeName}}> = 
-        {{#each facets}}
-        Omit<{{../typeName}}Facets, keyof T> extends {{../typeName}}{{properCase this.name}}Remainders ? Required<{{../typeName}}{{properCase this.name}}Remainders> :
-        {{/each}}
+    type {{pascal typeName}}RemainingFacets<T extends {{pascal typeName}}> = 
+    {{#each facets}}
+        Omit<{{pascal ../typeName}}Facets, keyof T> extends {{pascal ../typeName}}{{pascal this.name}}Remainders ? Required<{{pascal ../typeName}}{{pascal this.name}}Remainders> :
+    {{/each}}
         never;
 
     {{#if index}}
-    export type {{typeName}}PK = {{{ buildIndexType (filterIndexType facets "pk") }}}
+    export type {{pascal typeName}}PK = {{{ buildIndexType (filterIndexType facets "pk") }}};
 
-    export type {{typeName}}SK = {{{ buildIndexType (filterIndexType facets "sk") }}}
+    export type {{pascal typeName}}SK = {{{ buildIndexType (filterIndexType facets "sk") }}};
 
     {{/if}}
     {{/each}}
-    // Figure out better typing for value here
+    
     export type FilterOperations<T> = {
-        gte: (value: T) => string
-        gt: (value: T) => string
-        lte: (value: T) => string
-        lt: (value: T) => string
-        eq: (value: T) => string
-        begins: (value: T) => string
-        exists: () => T
-        notExists: () => T
-        contains: (value: T) => string
-        notContains: (value: T) => string
-        between: (start: T, end: T) => string
-        name: () => T
-        value: (value: T) => string
+        gte: (value: T) => string;
+        gt: (value: T) => string;
+        lte: (value: T) => string;
+        lt: (value: T) => string;
+        eq: (value: T) => string;
+        begins: (value: T) => string;
+        exists: () => T;
+        notExists: () => T;
+        contains: (value: T) => string;
+        notContains: (value: T) => string;
+        between: (start: T, end: T) => string;
+        name: () => T;
+        value: (value: T) => string;
     };
     
     export type FilterAttributes<T extends Attributes> = {
-        [K in keyof T]: FilterOperations<T[K]>
+        [K in keyof T]: FilterOperations<T[K]>;
     }
     
-    export type GoRecord<T> = () => Promise<T>
+    export type GoRecord<T> = () => Promise<T>;
 
-    export type PageRecord = (page?: {{tableIndexName}} | null) => Promise<[Item | null, Item[]]> 
+    export type PageRecord = (page?: {{pascal tableIndexName}} | null) => Promise<[{{pascal tableIndexName}}Facets | null, Item[]]>;
 
-    export type ParamRecord = () => object
+    export type ParamRecord = () => object;
 
-    export type FilterRecords = (filter: <T extends Attributes>(record: FilterAttributes<T>) => string) => RecordsActionOptions
+    export type FilterRecords<T> = (filter: <A extends Attributes>(record: FilterAttributes<A>) => string) => RecordsActionOptions<T>;
 
-    export type WhereRecords = (where: Where.Callback) => RecordsActionOptions
+    export type WhereRecords<T> = (where: Where.Callback) => RecordsActionOptions<T>;
 
-    export type RecordsActionOptions = {
-        go: GoRecord<Item[]>;
+    export type RecordsActionOptions<T> = {
+        go: GoRecord<T>;
         params: ParamRecord;
         page: PageRecord;
-        filter: FilterRecords;
-        where: WhereRecords;
+        filter: FilterRecords<T>;
+        where: WhereRecords<T>;
     }
 
     export type SingleRecordOperationOptions<T> = {
         go: GoRecord<T>;
         params: ParamRecord;
-        where: WhereRecords;
+        where: WhereRecords<T>;
     };
     
-    export type SetRecordActionOptions = {
-        go: GoRecord<Item>;
+    export type SetRecordActionOptions<T> = {
+        go: GoRecord<T>;
         params: ParamRecord;
-        filter: FilterRecords;
+        filter: FilterRecords<T>;
         page: PageRecord;
-        set: SetRecord;
-        where: WhereRecords;
+        set: SetRecord<T>;
+        where: WhereRecords<T>;
     }
     
-    export type SetRecord = (properties: Partial<NonReadOnlyProperties>) => SetRecordActionOptions
+    export type SetRecord<T> = (properties: Partial<NonReadOnlyProperties>) => SetRecordActionOptions<T>;
     
     export type QueryOperations<T> = {
-        between: (skFacetsStart: T, skFacetsEnd: T) => RecordsActionOptions
-        gt: (skFacets: T) => RecordsActionOptions
-        gte: (skFacets: T) => RecordsActionOptions
-        lt: (skFacets: T) => RecordsActionOptions
-        lte: (skFacets: T) => RecordsActionOptions
-        go: GoRecord<Item[]>
-        params: ParamRecord
-        page: PageRecord
-        filter: FilterRecords
-        where: WhereRecords
+        between: (skFacetsStart: T, skFacetsEnd: T) => RecordsActionOptions<Item[]>;
+        gt: (skFacets: T) => RecordsActionOptions<Item[]>;
+        gte: (skFacets: T) => RecordsActionOptions<Item[]>;
+        lt: (skFacets: T) => RecordsActionOptions<Item[]>;
+        lte: (skFacets: T) => RecordsActionOptions<Item[]>;
+        go: GoRecord<Item[]>;
+        params: ParamRecord;
+        page: PageRecord;
+        filter: FilterRecords<Item[]>;
+        where: WhereRecords<Item[]>;
     }
     
-    export class {{name}} {
-        get(key: {{tableIndexName}}Facets): SingleRecordOperationOptions<Item>;
-        delete(key: {{tableIndexName}}Facets): SingleRecordOperationOptions<Item>;
-        delete(key: {{tableIndexName}}Facets[]): SingleRecordOperationOptions<Item>;
-        update(key: {{tableIndexName}}Facets): {set: SetRecord};
-        patch(key: {{tableIndexName}}Facets): {set: SetRecord};
+    export class {{pascal name}} {
+        get(key: {{pascal tableIndexName}}Facets): SingleRecordOperationOptions<Item>;
+        delete(key: {{pascal tableIndexName}}Facets): SingleRecordOperationOptions<Item>;
+        delete(key: {{pascal tableIndexName}}Facets[]): SingleRecordOperationOptions<Item>;
+        update(key: {{pascal tableIndexName}}Facets): {set: SetRecord<Item>};
+        patch(key: {{pascal tableIndexName}}Facets): {set: SetRecord<Item>};
         put(record: Item): SingleRecordOperationOptions<Item>;
         put(record: Item[]): SingleRecordOperationOptions<Item>;
         create(record: Item): SingleRecordOperationOptions<Item>;
-        find(record: Partial<Item>): RecordsActionOptions;
+        find(record: Partial<Item>): RecordsActionOptions<Item[]>;
         setIdentifier(type: "model" | "table", value: string): void;
         query: {
             {{#each indexes}}
             {{#if hasSK}}
-            {{name}}<T extends {{typeName}}>(key: T): QueryOperations<{{typeName}}RemainingFacets<T>>
+            {{name}}<T extends {{pascal typeName}}>(key: T): QueryOperations<{{pascal typeName}}RemainingFacets<T>>;
             {{else}}
-            {{name}}(key: {{typeName}}): RecordsActionOptions,
+            {{name}}(key: {{pascal typeName}}): RecordsActionOptions<Item[]>;
             {{/if}}
             {{/each}}
         };
@@ -216,45 +216,45 @@ export declare namespace {{name}} {
 }
 {{/eq}}
 {{#eq type "collection"}}
-export declare namespace {{name}}Collection {
+export declare namespace {{pascal name}}Collection {
     namespace Where {
         {{#each attributes}}
-        const {{name}}Symbol: unique symbol;
+        const {{pascal name}}Symbol: unique symbol;
 
         {{/each}}
         {{#each attributes}}
-        interface {{name}} {
-            [{{name}}Symbol]: void;
+        interface {{pascal name}} {
+            [{{pascal name}}Symbol]: void;
         }
 
         {{/each}}
-        type AttributesName = {{{union attributeNames}}}
+        type AttributesName = {{{union (pascal attributeNames)}}};
 
         type AttributeType<T extends AttributesName> =
-            {{#each attributes}}
-            T extends {{name}} ? {{type}} :
-            {{/each}}
+        {{#each attributes}}
+            T extends {{pascal name}} ? {{type}} :
+        {{/each}}
             never;
         
         type Operations = {
-            eq: <T extends AttributesName>(attr: T, value: AttributeType<T>) => string,
-            gt: <T extends AttributesName>(attr: T, value: AttributeType<T>) => string,
-            lt: <T extends AttributesName>(attr: T, value: AttributeType<T>) => string,
-            gte: <T extends AttributesName>(attr: T, value: AttributeType<T>) => string,
-            lte: <T extends AttributesName>(attr: T, value: AttributeType<T>) => string,
-            between: <T extends AttributesName>(attr: T, value: AttributeType<T>, value2: AttributeType<T>) => string,
-            begins: <T extends AttributesName>(attr: T, value: AttributeType<T>) => string,
-            exists: <T extends AttributesName>(attr: T) => string,
-            notExists: <T extends AttributesName>(attr: T) => string,
-            contains: <T extends AttributesName>(attr: T, value: AttributeType<T>) => string,
-            notContains: <T extends AttributesName>(attr: T, value: AttributeType<T>) => string,
-            value: <T extends AttributesName>(attr: T, value: AttributeType<T>) => string,
-            name: <T extends AttributesName>(attr: T) => string,
+            eq: <T extends AttributesName>(attr: T, value: AttributeType<T>) => string;
+            gt: <T extends AttributesName>(attr: T, value: AttributeType<T>) => string;
+            lt: <T extends AttributesName>(attr: T, value: AttributeType<T>) => string;
+            gte: <T extends AttributesName>(attr: T, value: AttributeType<T>) => string;
+            lte: <T extends AttributesName>(attr: T, value: AttributeType<T>) => string;
+            between: <T extends AttributesName>(attr: T, value: AttributeType<T>, value2: AttributeType<T>) => string;
+            begins: <T extends AttributesName>(attr: T, value: AttributeType<T>) => string;
+            exists: <T extends AttributesName>(attr: T) => string;
+            notExists: <T extends AttributesName>(attr: T) => string;
+            contains: <T extends AttributesName>(attr: T, value: AttributeType<T>) => string;
+            notContains: <T extends AttributesName>(attr: T, value: AttributeType<T>) => string;
+            value: <T extends AttributesName>(attr: T, value: AttributeType<T>) => string;
+            name: <T extends AttributesName>(attr: T) => string;
         };
 
         type Attributes = {
             {{#each attributes}}
-            {{name}}: {{name}};
+            {{name}}: {{pascal name}};
             {{/each}}
         }
 
@@ -265,68 +265,68 @@ export declare namespace {{name}}Collection {
     type {{name}} = {{{stringUnion values}}};
 
     {{/each}}
-    type IndexFacets = {{{ buildIndexType facets }}}
+    type IndexFacets = {{{ buildIndexType facets }}};
     
     type Attributes = {
     {{#each attributes}}
-        {{name}}{{#if optional}}?{{/if}}: {{type}}
+        {{name}}{{#if optional}}?{{/if}}: {{type}};
     {{/each}}
     }
     
     {{#each item}}
-    type {{@key}}Item = {
-        {{#each this}}
-        {{name}}{{#if optional}}?{{/if}}: {{type}}
-        {{/each}}
+    type {{pascal @key}}Item = {
+    {{#each this}}
+        {{name}}{{#if optional}}?{{/if}}: {{type}};
+    {{/each}}
     }
     
     {{/each}}
     export type Item = {
     {{#each item}}
-        {{@key}}: {{@key}}Item[]
+        {{@key}}: {{pascal @key}}Item[];
     {{/each}}
     }
     
-    // Figure out better typing for value here
+    
     type FilterOperations<T> = {
-        gte: (value: T) => string
-        gt: (value: T) => string
-        lte: (value: T) => string
-        lt: (value: T) => string
-        eq: (value: T) => string
-        begins: (value: T) => string
-        exists: () => T
-        notExists: () => T
-        contains: (value: T) => string
-        notContains: (value: T) => string
-        between: (start: T, end: T) => string
-        name: () => T
-        value: (value: T) => string
+        gte: (value: T) => string;
+        gt: (value: T) => string;
+        lte: (value: T) => string;
+        lt: (value: T) => string;
+        eq: (value: T) => string;
+        begins: (value: T) => string;
+        exists: () => T;
+        notExists: () => T;
+        contains: (value: T) => string;
+        notContains: (value: T) => string;
+        between: (start: T, end: T) => string;
+        name: () => T;
+        value: (value: T) => string;
     };
     
     type FilterAttributes<T extends Attributes> = {
-        [K in keyof T]: FilterOperations<T[K]>
+        [K in keyof T]: FilterOperations<T[K]>;
     }
     
-    type GoRecord<T> = () => Promise<T>
+    type GoRecord<T> = () => Promise<T>;
 
-    type PageRecord = (page?: Attributes | null) => Promise<[Attributes | null, Item[]]> 
+    type PageRecord = (page?: Attributes | null) => Promise<[Attributes | null, Item[]]> ;
 
-    type ParamRecord = () => object
+    type ParamRecord = () => object;
 
-    type FilterRecords = (filter: <T extends Attributes>(record: FilterAttributes<T>) => string) => RecordsActionOptions
+    type FilterRecords<T> = (filter: <A extends Attributes>(record: FilterAttributes<A>) => string) => RecordsActionOptions<T>;
 
-    type WhereRecords = (where: Where.Callback) => RecordsActionOptions
+    type WhereRecords<T> = (where: Where.Callback) => RecordsActionOptions<T>;
 
-    type RecordsActionOptions = {
-        go: GoRecord<Item>
-        params: ParamRecord
-        page: PageRecord
-        filter: FilterRecords
-        where: WhereRecords
+    type RecordsActionOptions<T> = {
+        go: GoRecord<T>;
+        params: ParamRecord;
+        page: PageRecord;
+        filter: FilterRecords<T>;
+        where: WhereRecords<T>;
     }
     
-    type {{name}} = (key: IndexFacets) => RecordsActionOptions
+    type {{pascal name}} = (key: IndexFacets) => RecordsActionOptions<Item[]>;
 }
 {{/eq}}
 
@@ -340,14 +340,14 @@ export declare class Instance {
     entities: {
         {{#each instances}}
         {{#eq type "entity"}}
-        {{name}}: {{name}}.{{name}}, 
+        {{name}}: {{pascal name}}.{{pascal name}}, 
         {{/eq}}
         {{/each}}
     };
     collections: {
         {{#each instances}}
         {{#eq type "collection"}}
-        {{name}}: {{name}}Collection.{{name}}
+        {{name}}: {{pascal name}}Collection.{{pascal name}}
         {{/eq}}
         {{/each}}
     };
@@ -356,7 +356,7 @@ export declare class Instance {
 declare const _default: Instance;
 
 {{else}}
-export type Instance = {{export}}.{{export}}
+export type Instance = {{pascal export}}.{{pascal export}}
 
 declare const _default: Instance;
 

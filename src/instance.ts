@@ -1,4 +1,5 @@
 import {RemoteFile} from "./files";
+import {pascal} from "./handlebars";
 const {Entity} = require("electrodb");
 
 const FilterOperations = ["eq","gt","lt","gte","lte","between","begins","exists","notExists","contains","notContains"] as const;
@@ -138,8 +139,9 @@ export abstract class Instance {
 
   getAttributeTypeName(attribute: string): string {
     let attr = this.getAttribute(attribute);
+    // This logic should definitely not be here. find out why it is.
     if (attr.type === "enum") {
-        return `${attribute}Enum`;
+        return `${pascal(attribute)}Enum`;
     }
     return attr.type;
   }

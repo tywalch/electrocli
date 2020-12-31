@@ -68,7 +68,7 @@ export function buildIndexType(values: FacetDetail[], facetStart?: string) {
 
 export function concatIndexType(values: IndexType[][] = []) {
   return values.map(facets => {
-      return `{ ${facets.map(facet => `${facet.name}: ${facet.type}`).join(", ")} }`
+      return `{ ${facets.map(facet => `${facet.name}: ${facet.type}`).join("; ")} }`
   }).join(" | ") || "{}";
 }
 
@@ -89,20 +89,34 @@ export function ne(this: typeof Handlebars, type: any, value: any, options: Hand
     ? options.inverse(this)
     : options.fn(this);
 }
+export function pascal(value: string): string;
+export function pascal(value: string[]): string[];
+export function pascal(value: string|string[]) {
+  if (typeof value !== "string" && !Array.isArray(value)) {
+    console.log({value, type: typeof value});
+    throw new Error("Can only proper case strings and string arrays");
+  }
 
-export function properCase(value: string) {
-  if (typeof value !== "string") {
-    throw new Error("Can only proper case strings.");
-  }
-  let cased = "";
-  for (let i = 0; i < value.length; i++) {
-    if (i === 0) {
-      cased += value[i].toUpperCase()
-    } else {
-      cased += value[i];
+  let values: string[] = Array.isArray(value) ? value: [value];
+  let casedValues: string[] = [];
+
+  for (let i = 0; i < values.length; i++) {
+    let cased = "";
+    for (let j = 0; j < values[i].length; j++) {
+      if (j === 0) {
+        cased += values[i][j].toUpperCase()
+      } else {
+        cased += values[i][j];
+      }
     }
+    casedValues.push(cased);
   }
-  return cased;
+
+  if (typeof value === "string") {
+    return casedValues[0];
+  } else {
+    return casedValues;
+  }
 }
 
 Handlebars.registerHelper({
@@ -110,7 +124,7 @@ Handlebars.registerHelper({
   eq,
   union,
   prefix,
-  properCase,
+  pascal,
   stringUnion,
   buildIndexType,
   concatIndexType,

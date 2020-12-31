@@ -1,6 +1,7 @@
 import Handlebars from "./handlebars";
 import {ElectroInstance, ElectroInstances, IndexTypes, InstanceAccessType, Instance, Facet, Attribute, ElectroInstanceType} from "./instance";
 import {LocalFile} from "./files";
+import {pascal} from "./handlebars";
 
 type AttributeDetail = {
   type: string;
@@ -61,7 +62,7 @@ export default class InstanceTemplater extends ElectroInstance {
 
   private formatAttributeType(name: string, type: string): string { 
     if (type === "enum") {
-      return `${name}Enum`;
+      return `${pascal(name)}Enum`;
     } else {
       return type;
     }

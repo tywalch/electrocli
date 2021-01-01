@@ -21,7 +21,6 @@ export default function generate(inFile: string, outFile: string = "") {
     writer.write(compiled);
     return outFile;
   } catch(err) {
-    console.log(err);
     console.error("Error:", err.message);
     process.exit(1);
   }

@@ -13,7 +13,7 @@ const ConfigurationLocation = `${os.homedir()}/.electro_config`;
 export default function(program: commander.Command) {
   program
     .command("typedef <filepath>")
-    .description("Specify a file that exports an ElectroDB Service or Entity and Electro will automatically generate a typescript type definition file.")
+    .description("Specify a file that exports an ElectroDB Service or Entity and Electro CLI will automatically generate a typescript type definition file.")
     .option("-o, --output <filepath>", "Specify an output filepath for the generated type definition file.")
     .action((filepath: string, {output}: {output?: string} = {}) => {
       let display = typeDef(filepath, output);
@@ -22,21 +22,20 @@ export default function(program: commander.Command) {
   
   program
     .command("add <filepath>")
-    .description("Specify a file that exports an ElectroDB Service or Entity and Electro will add that Instance to the CLI")
-    .option("-l, --label <label>", "Specify a custom label for this service to appear in the CLI")
-    .option("-t, --table <table>", "Specify a default table to use with this instance")
-    .option("-e, --endpoint <url>", "Specify a default dynamodb endpoint to use with this instance (model imports only)")
-    .option("-r, --region <region>", "Specify a default aws region to use with this instance (model imports only)")
+    .description("Specify a file that exports an ElectroDB Service, Entity, or JSON Model. Electro will add that Instance to the CLI allowing it to be queried.")
+    .option("-l, --label <label>", "Specify a custom label for this service to appear in the CLI. (default: Service/Entity name)")
+    .option("-t, --table <table>", "Specify a default table to use with this instance - Required for Models.")
+    .option("-p, --params <params>", "Specify JSON for custom DocumentClient configuration. If filepath exports a Service or Entity this configuration will overwrite any client specified on that instance.")
     .option("-o, --overwrite", "Overwrite existing tag if already exists")
-    .action((filePath: string, {label, overwrite, table, endpoint, region}: AddReferenceConfiguration = {}) => {
-      let display = add(ConfigurationLocation, filePath, {label, overwrite, table, endpoint, region});
+    .action((filePath: string, {label, overwrite, table, params}: AddReferenceConfiguration = {}) => {
+      let display = add(ConfigurationLocation, filePath, {label, overwrite, table, params});
       console.log(display);
     });
 
   program
     .command("remove <service>")
     .alias("rm")
-    .description("Remove references added to the Electro CLI")
+    .description("Remove existing ElectroDB Instance from the Electro CLI.")
     .action((service: string) => {
       let display = remove(ConfigurationLocation, service);
       console.log(display);
@@ -45,7 +44,7 @@ export default function(program: commander.Command) {
   program
     .command("list")
     .alias("ls")
-    .description("List all ElectroDB instances that have been imported into the Electro cli")
+    .description("List all ElectroDB Instances that have been imported into the Electro CLI.")
     .action(() => {
       let display = list(ConfigurationLocation);
       console.log(display);
@@ -53,19 +52,20 @@ export default function(program: commander.Command) {
 
   program
     .command("serve <port>")
-    .description("Stand up a local http endpoint based on your models")
+    .alias("rest <port>")
+    .description("Stand up a local http endpoint based on your Instances.")
     .action((port: number) => {
       serve(ConfigurationLocation, port);
     });
 
   try {
-    let query = createQueryCommand("query", "Query local instances that have been added to the CLI", queryCommand);
-    let scan = createQueryCommand("scan", "Scan for local instances that have been added to the CLI", scanCommand);
+    let query = createQueryCommand("query", "Query local Instances that have been added to the CLI.", queryCommand);
+    let scan = createQueryCommand("scan", "Scan for local Instances that have been added to the CLI.", scanCommand);
     program.addCommand(scan);
     program.addCommand(query);
     program.parse(process.argv);
   } catch(err) {
-    console.log("Error:", err.message, err);
+    console.log("Error:", err.message);
     process.exit(1);
   }
 }
@@ -121,7 +121,7 @@ function scanCommand(program: commander.Command, service: ElectroInstance): void
   for (let entity in service.scans) {
     let instance = service.instances.find(instance => instance.name === entity);
     if (instance && instance.type === "entity") {
-      let command = program.command(entity.toLowerCase()).description(`Perform scan on ${entity} entities`);
+      let command = program.command(entity.toLowerCase()).description(`Perform scan on ${entity} entities.`);
       executeQuery(command, {
         name: entity.toLowerCase(),
         query: service.scans[entity],
@@ -148,12 +148,12 @@ function executeQuery(program: commander.Command, params: BuildQueryParameters):
   program
     .option("-r, --raw", "Retrun raw field response.")
     .option("-p, --params", "Return docClient params as results.")
-    .option("-t, --table <table>", "Override table defined on model")
-    .option("-l, --limit <number>", "Limit the number of results returned")
-    .option(`-f, --filter <expression>`, `Supply a filter expression "<attribute> <operation> <value>". Available attributes include ${attributeNames.join(", ")}`, getFilterParser(attributeNames), []);
+    .option("-t, --table <table>", "Override table defined on model.")
+    .option("-l, --limit <number>", "Limit the number of results returned.")
+    .option(`-f, --filter <expression>`, `Supply a filter expression "<attribute> <operation> <value>". Available attributes include ${attributeNames.join(", ")}.`, getFilterParser(attributeNames), []);
   
   if (shouldRemove) {
-    program = program.option("-d, --delete", "Delete items returned from query");
+    program = program.option("-d, --delete", "Delete items returned from query.");
   }
   
   program.action(async (...args: any) => {

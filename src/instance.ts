@@ -1,5 +1,7 @@
 import {RemoteFile} from "./files";
 import {pascal} from "./handlebars";
+import DynamoDB from "aws-sdk/clients/dynamodb";
+
 const {Entity} = require("electrodb");
 
 const FilterOperations = ["eq","gt","lt","gte","lte","between","begins","exists","notExists","contains","notContains"] as const;
@@ -36,29 +38,30 @@ export type ElectroInstanceType = "service" | "entity" | "model";
 export type ElectroInstances = Service | Entity;
 
 export type Entity = {
-  _instance: {description: "entity"} // really a `symbol` but typescript doesnt understand
+  _instance: {description: "entity"}; // really a `symbol` but typescript doesnt understand
+  client: DynamoDB.DocumentClient;
   identifiers: {
-    model: string
-    version: string
+    model: string;
+    version: string;
   };
   query: QueryRecord;
-  get(val: any): any
+  get(val: any): any;
   delete: QueryMethod;
   create: QueryMethod;
   patch: QueryMethod;
   scan: QueryOperation;
-  find: any
+  find: any;
   model: {
-    entity: string
-    service: string
+    entity: string;
+    service: string;
     facets: {
-      byIndex: Record<string, IndexFacet>
-      fields: string[]
+      byIndex: Record<string, IndexFacet>;
+      fields: string[];
     }
     schema: {
-      attributes: Record<string, Attribute>
+      attributes: Record<string, Attribute>;
     },
-    indexes: Record<string, Index>,
+    indexes: Record<string, Index>;
     translations: {
       indexes: {
         fromIndexToAccessPattern: Record<string, string>;
@@ -69,15 +72,16 @@ export type Entity = {
 }
 
 export type Service = {
-  _instance: {description: "service"}
-  entities: Record<string, Entity>
+  _instance: {description: "service"};
+  client: DynamoDB.DocumentClient;
+  entities: Record<string, Entity>;
   service: {
     name: string;
     table: string;
   }
-  collectionSchema: Record<string, CollectionSchema>
-  collections: QueryRecord
-  find: Record<string, any>
+  collectionSchema: Record<string, CollectionSchema>;
+  collections: QueryRecord;
+  find: Record<string, any>;
 }
 
 type CollectionSchema = {
@@ -399,6 +403,10 @@ export class ElectroInstance {
     this.isService = ElectroInstance.isService(electro);
   }
 
+  getTableName() {
+    
+  }
+
   setName(name: string) {
     this.name = name;
   }
@@ -469,6 +477,18 @@ export type QueryOperation = {
 
 export type QueryMethod = (facets: object) => QueryOperation;
 
+function parseClientParams(params?: string): [boolean, object] {
+  if (params) {
+    try {
+      let p = JSON.parse(params);
+      return [true, p];
+    } catch(err) {
+      return [false, {}];
+    }
+  }
+  return [true, {}];
+}
+
 export class InstanceReader {
   public filePath: string;
 
@@ -493,29 +513,32 @@ export class InstanceReader {
       return instance && instance._instance !== undefined;
   }
 
-  get({table, endpoint, region}: {table?: string, endpoint?: string, region?: string} = {}): [ElectroInstanceType, ElectroInstances] {
-    let instance = require(this.filePath);
-    if (this.isElectroInstance(instance)) {
-      return [instance._instance.description, instance];
-    } else if (instance.attributes) {
-      try {
-        const DynamoDB = require("aws-sdk/clients/dynamodb");
-        const config: {endpoint?: string, region?: string} = {};
-        if (endpoint) {
-          config.endpoint = endpoint; 
-        }
-        if (region) {
-          config.region = region;
-        }
-        const client = new DynamoDB.DocumentClient(config);
-        const default_table_name = "your_table_name";
-        return ["model", new Entity(instance, {table: table || default_table_name, client})];
-      } catch(err) {
-        throw err
+  get({table, params}: {table?: string, params?: string} = {}): [ElectroInstanceType, ElectroInstances] {
+    try {
+      let [isValid, parameters] = parseClientParams(params);
+      if (!isValid) {
+        throw new Error(`Provided parameters are not valid JSON: ${params}`);
       }
-      // placeholder for importing model;
-    } else {
-      throw new Error("File must instance of Entity, Service, or Model.");
+      const instance = require(this.filePath);
+      const config: DynamoDB.Types.ClientConfiguration = parameters || {};
+      const client = new DynamoDB.DocumentClient(config);
+      if (this.isElectroInstance(instance)) {
+        if (Object.keys(config).length) {
+          instance.client = client;
+        }
+        return [instance._instance.description, instance];
+      } else {
+        
+        // expecting Entity Model, use constructor to validate entity: constructor will throw in invalid.
+        try {
+          new Entity(instance, {table: "_", client});
+        } catch(err) {
+          throw new Error(`File specified (${this.filePath}) is not a valid ElectroDB Service, Entity, or Model: \r\n\t${err.message}`);
+        }
+        return ["model", new Entity(instance, {table, client})];
+      }
+    } catch(err) {
+      throw err;
     }
   }
 }

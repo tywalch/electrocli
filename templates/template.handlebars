@@ -151,7 +151,7 @@ export declare namespace {{pascal name}} {
     
     export type GoRecord<T> = (options: GoOptions = {}) => Promise<T>;
 
-    export type PageRecord = (page?: {{pascal tableIndexName}} | null, options: GoOptions = {}) => Promise<[{{pascal tableIndexName}}Facets | null, Item[]]>;
+    export type PageRecord<T> = (page?: {{pascal tableIndexName}} | null, options: GoOptions = {}) => Promise<[{{pascal tableIndexName}}Facets | null, T]>;
 
     export type ParamRecord = (options: GoOptions = {}) => object;
 
@@ -162,7 +162,7 @@ export declare namespace {{pascal name}} {
     export type RecordsActionOptions<T> = {
         go: GoRecord<T>;
         params: ParamRecord;
-        page: PageRecord;
+        page: PageRecord<T>;
         filter: FilterRecords<T>;
         where: WhereRecords<T>;
     }
@@ -177,7 +177,7 @@ export declare namespace {{pascal name}} {
         go: GoRecord<T>;
         params: ParamRecord;
         filter: FilterRecords<T>;
-        page: PageRecord;
+        page: PageRecord<T>;
         set: SetRecord<T>;
         where: WhereRecords<T>;
     }
@@ -192,7 +192,7 @@ export declare namespace {{pascal name}} {
         lte: (skFacets: T) => RecordsActionOptions<Item[]>;
         go: GoRecord<Item[]>;
         params: ParamRecord;
-        page: PageRecord;
+        page: PageRecord<Item[]>;
         filter: FilterRecords<Item[]>;
         where: WhereRecords<Item[]>;
     }
@@ -325,8 +325,6 @@ export declare namespace {{pascal name}}Collection {
     
     type GoRecord<T> = (options: GoOptions = {}) => Promise<T>;
 
-    type PageRecord = (page?: Attributes | null, options: GoOptions = {}) => Promise<[Attributes | null, Item[]]> ;
-
     type ParamRecord = (options: GoOptions = {}) => object;
 
     type FilterRecords<T> = (filter: <A extends Attributes>(record: FilterAttributes<A>) => string) => RecordsActionOptions<T>;
@@ -336,12 +334,11 @@ export declare namespace {{pascal name}}Collection {
     type RecordsActionOptions<T> = {
         go: GoRecord<T>;
         params: ParamRecord;
-        page: PageRecord;
         filter: FilterRecords<T>;
         where: WhereRecords<T>;
     }
     
-    type {{pascal name}} = (key: IndexFacets) => RecordsActionOptions<Item[]>;
+    type {{pascal name}} = (key: IndexFacets) => RecordsActionOptions<Item>;
 }
 {{/eq}}
 

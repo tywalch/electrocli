@@ -8,13 +8,13 @@ export function typeDef(filepath: string, output?: string): string | undefined {
   return generate(filepath, output);
 }
 
-export function add(configurationLocation: string, filePath: string, {label, overwrite, table, endpoint, region}: AddReferenceConfiguration = {}): string {
+export function add(configurationLocation: string, filePath: string, {label, overwrite, table, params}: AddReferenceConfiguration = {}): string {
   const store = new ReferenceStore(configurationLocation);
   const config = new ReferenceConfiguration(store);
   let instanceReader = new InstanceReader(filePath);
-  let [, instance] = instanceReader.get({table, endpoint, region});
+  let [, instance] = instanceReader.get({table, params});
   let electro = new ElectroInstance(instance);
-  return config.add(filePath, electro, label, {overwrite, table, endpoint, region});
+  return config.add(filePath, electro, label, {overwrite, table, params});
 }
 
 export function remove(configurationLocation: string, service: string): string {
@@ -45,7 +45,7 @@ export function getElectroInstances(location: string): ElectroInstance[] {
       reader = new InstanceReader(services[name].filePath);
       [,instance] = reader.get(services[name]);
     } catch(err) {
-      console.log(colors.red(`Error loading service "${name}": ${err.message} - Remove this entity using 'remove' command or use the 'add' command with the --force flag to update the file path.`))
+      console.log(colors.red(`Error loading service "${name}": ${err.message} - Remove this entity using 'remove' command or use the 'add' command with the '--overwrite' flag to update the file path.`))
     }
     if (instance === undefined || reader === undefined) {
       continue;

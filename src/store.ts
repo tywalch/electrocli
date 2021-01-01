@@ -4,9 +4,8 @@ import { ElectroInstance } from "./instance";
 
 type ReferenceDetail = {
   filePath: string;
-  endpoint?: string;
   table?: string;
-  region?: string;
+  params?: string;
 };
 
 type InstanceReferences = Record<string, ReferenceDetail>;
@@ -14,9 +13,8 @@ type InstanceReferences = Record<string, ReferenceDetail>;
 export type AddReferenceConfiguration = {
   label?: string;
   overwrite?: boolean;
-  region?: string;
   table?: string;
-  endpoint?: string;
+  params?: string;
 }
 
 export class ReferenceStore {
@@ -40,7 +38,7 @@ export class ReferenceStore {
     return this.read();
   }
 
-  append(filePath: string, name: string, {overwrite = false, endpoint, region, table}: AddReferenceConfiguration = {}): InstanceReferences {
+  append(filePath: string, name: string, {overwrite = false, table, params}: AddReferenceConfiguration = {}): InstanceReferences {
     let config = this.get();
     let existing = config[name];
     let file = new RemoteFile(filePath);
@@ -53,7 +51,7 @@ export class ReferenceStore {
         throw new Error(`Service name ${name} is already associated with file ${existing.filePath}. Remove this service first if you still wish to use the name ${name}.`)
       }
     }
-    config[name] = {filePath: file.path(), endpoint, region, table};
+    config[name] = {filePath: file.path(), table, params};
     this.write(config);
     return config;
   }
@@ -80,9 +78,9 @@ export class ReferenceConfiguration {
     this.store = store;
   }
 
-  add(filePath: string, instance: ElectroInstance, name: string = "", {overwrite, endpoint, region, table}: AddReferenceConfiguration = {}) {
+  add(filePath: string, instance: ElectroInstance, name: string = "", {overwrite, table, params}: AddReferenceConfiguration = {}) {
     let serviceName = typeof name === "string" && name.length > 0 ? name : instance.name;
-    this.store.append(filePath, serviceName, {overwrite, endpoint, region, table});
+    this.store.append(filePath, serviceName, {overwrite, table, params});
     return serviceName;
   }
 
@@ -93,9 +91,9 @@ export class ReferenceConfiguration {
 
   list() {
     let services = this.store.get();
-    let table = new Table({head: ["service", "location", "table", "endpoint", "region"]});
+    let table = new Table({head: ["service", "location", "table", "params"]});
     for (let name of Object.keys(services)) {
-      table.push([name, services[name].filePath, services[name].table || "na", services[name].endpoint || "na", services[name].region || "na"]);
+      table.push([name || "", services[name].filePath || "", services[name].table || "", services[name].table || "{}"]);
     }
     return table.toString();
   }

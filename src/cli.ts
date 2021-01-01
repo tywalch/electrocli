@@ -14,6 +14,7 @@ export function add(configurationLocation: string, filePath: string, {label, ove
   let instanceReader = new InstanceReader(filePath);
   let [, instance] = instanceReader.get({table, params});
   let electro = new ElectroInstance(instance);
+  table = table || instance._getTableName();
   return config.add(filePath, electro, label, {overwrite, table, params});
 }
 
@@ -42,8 +43,9 @@ export function getElectroInstances(location: string): ElectroInstance[] {
     let reader;
     let instance;
     try {
+      let options = {table: services[name].table, params: services[name].params};
       reader = new InstanceReader(services[name].filePath);
-      [,instance] = reader.get(services[name]);
+      [,instance] = reader.get(options);
     } catch(err) {
       console.log(colors.red(`Error loading service "${name}": ${err.message} - Remove this entity using 'remove' command or use the 'add' command with the '--overwrite' flag to update the file path.`))
     }

@@ -79,7 +79,7 @@ export class ReferenceConfiguration {
   }
 
   add(filePath: string, instance: ElectroInstance, name: string = "", {overwrite, table, params}: AddReferenceConfiguration = {}) {
-    let serviceName = typeof name === "string" && name.length > 0 ? name : instance.name;
+    let serviceName = typeof name === "string" && name.length > 0 ? name : instance.name; 
     this.store.append(filePath, serviceName, {overwrite, table, params});
     return serviceName;
   }
@@ -93,7 +93,7 @@ export class ReferenceConfiguration {
     let services = this.store.get();
     let table = new Table({head: ["service", "location", "table", "params"]});
     for (let name of Object.keys(services)) {
-      table.push([name || "", services[name].filePath || "", services[name].table || "", services[name].table || "{}"]);
+      table.push([name || "", services[name].filePath || "", services[name].table || "", services[name].params || "{}"]);
     }
     return table.toString();
   }

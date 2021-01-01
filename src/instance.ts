@@ -39,6 +39,8 @@ export type ElectroInstances = Service | Entity;
 
 export type Entity = {
   _instance: {description: "entity"}; // really a `symbol` but typescript doesnt understand
+  _getTableName(): string;
+  _setTableName(name: string): void;
   client: DynamoDB.DocumentClient;
   identifiers: {
     model: string;
@@ -73,6 +75,8 @@ export type Entity = {
 
 export type Service = {
   _instance: {description: "service"};
+  _getTableName(): string;
+  _setTableName(name: string): void;
   client: DynamoDB.DocumentClient;
   entities: Record<string, Entity>;
   service: {
@@ -526,16 +530,22 @@ export class InstanceReader {
         if (Object.keys(config).length) {
           instance.client = client;
         }
+        if (table) {
+          instance._setTableName(table)
+        }
         return [instance._instance.description, instance];
       } else {
-        
         // expecting Entity Model, use constructor to validate entity: constructor will throw in invalid.
         try {
           new Entity(instance, {table: "_", client});
         } catch(err) {
           throw new Error(`File specified (${this.filePath}) is not a valid ElectroDB Service, Entity, or Model: \r\n\t${err.message}`);
         }
-        return ["model", new Entity(instance, {table, client})];
+        let entity = new Entity(instance, {table, client});
+        if (table) {
+          entity._setTableName(table);
+        }
+        return ["model", entity];
       }
     } catch(err) {
       throw err;

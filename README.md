@@ -26,3 +26,6 @@ Commands:
   query                         Query local instances that have been added to the CLI
   help [command]                display help for command
 ```
+
+## Help
+`electro [command] --help`

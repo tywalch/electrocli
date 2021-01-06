@@ -124,6 +124,7 @@ Install `electrocli` via npm globally. Note: This may require `sudo` or administ
 ```
 $> npm install electrocli --global
 ```
+---
 
 #### Clone/Download Examples
 Clone the [electrodb](https://github.com/tywalch/electrodb) repository and then navigate to the the TaskApp example.
@@ -156,11 +157,21 @@ Use the `add` command to add the `taskr.js` within the `electrodb/examples/src` 
 ```
 $> electro add electrodb/examples/src/taskr.js
 ```
-
+---
 
 ### Query TaskApp 
 ```
 $> electro query taskapp
+```
+```
+Options:
+  -r, --raw                  Return raw field response.
+  -p, --params               Return DocumentClient params as results instead of querying the table.
+  -t, --table <table>        Override table defined on Instance.
+  -l, --limit <number>       Limit the number of results returned.
+  -f, --filter <expression>  Supply a filter expression "<attribute> <operation> <value>". Available attributes include employee, firstName, lastName, office, title, team, salary, manager, dateHired, birthday. (default: [])
+  -d, --delete               Delete items returned from query.
+  -h, --help                 display help for command
 ```
 | Access Pattern | Command |
 | -------------: | ------- |

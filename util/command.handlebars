@@ -1,0 +1,31 @@
+{{#if options.length}}
+`{{{usage}}}`
+{{/if}}
+
+{{{description}}}
+{{#if options.length}}
+
+#### Options
+| name | required | flags | description |
+| ---- | :------: | ----- | ----------- |
+{{#each options}}
+{{{name}}} | {{{required}}} | `{{{flags}}}` | {{{description}}} |
+{{/each}}
+{{/if}}
+{{#if args.length}}
+
+#### Args
+| name | required |
+| ---- | :------: |
+{{#each args}}
+{{{name}}} | {{{required}}} |
+{{/each}}
+{{/if}}
+{{#if children.length}}
+
+#### SubCommands
+{{#each children}}
+##### {{name}}
+{{> command this}}
+{{/each}}
+{{/if}}

@@ -208,6 +208,7 @@ export declare namespace {{pascal name}} {
         create(record: Item): SingleRecordOperationOptions<Item>;
         find(record: Partial<Item>): RecordsActionOptions<Item[]>;
         setIdentifier(type: "model" | "table", value: string): void;
+        scan: RecordsActionOptions<Item[]>
         query: {
             {{#each indexes}}
             {{#if hasSK}}

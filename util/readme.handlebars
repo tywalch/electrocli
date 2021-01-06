@@ -1,0 +1,35 @@
+# ElectroCLI
+![ElectroDB](https://github.com/tywalch/electrodb/blob/master/assets/electrodb-drk.png?raw=true)
+Electro is a CLI utility toolbox for extending the functionality of the node library [ElectroDB](https://github.com/tywalch/electrodb) to the terminal. 
+
+*This app is a work in progress, please submit issues/feedback or reach out on twitter [@tinkertamper](https://twitter.com/tinkertamper)*. 
+
+# Features 
+- Generate TypeScript definition files (`.d.ts`) for your ElectroDB `Entities` and `Services`
+
+# Install
+Install globally
+```
+npm install electrocli -g
+```
+
+# Usage
+```
+{{{usage}}}```
+
+# Commands
+{{#each commands}}
+## {{{name}}}
+```
+{{{help}}}```
+{{/each}}
+
+# Examples
+{{#each examples}}
+## {{{name}}}
+`electro query taskapp`
+| Access Pattern | Command |
+| -------------: | ------- |
+{{> examples children}}
+{{/each}}
+

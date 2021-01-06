@@ -53,21 +53,16 @@ export default function(program: commander.Command) {
   program
     .command("serve <port>")
     .alias("rest <port>")
-    .description("Stand up a local http endpoint based on your Instances.")
+    .description("Stand up a local http endpoint based on your imported Instances.")
     .action((port: number) => {
       serve(ConfigurationLocation, port);
     });
 
-  try {
-    let query = createQueryCommand("query", "Query local Instances that have been added to the CLI.", queryCommand);
-    let scan = createQueryCommand("scan", "Scan for local Instances that have been added to the CLI.", scanCommand);
+    let query = createQueryCommand("query", "Execute queries against your imported Instances.", queryCommand);
+    let scan = createQueryCommand("scan", "Execute scans against your imported Instances.", scanCommand);
     program.addCommand(scan);
     program.addCommand(query);
-    program.parse(process.argv);
-  } catch(err) {
-    console.log("Error:", err.message);
-    process.exit(1);
-  }
+    return program;
 }
 
 export function createQueryCommand(name: string, description: string, serviceCommand: ServiceCommand) {

@@ -1,0 +1,6 @@
+{{#each this}}
+{{#if args.length}}
+| {{{name}}} | `{{{this.usage}}}` |
+{{/if}}
+{{> examples children}}
+{{/each}}

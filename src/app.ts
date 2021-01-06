@@ -141,9 +141,9 @@ function executeQuery(program: commander.Command, params: BuildQueryParameters):
   let shouldRemove = !!(params.actions && params.actions.remove);
 
   program
-    .option("-r, --raw", "Retrun raw field response.")
-    .option("-p, --params", "Return docClient params as results.")
-    .option("-t, --table <table>", "Override table defined on model.")
+    .option("-r, --raw", "Return raw field response.")
+    .option("-p, --params", "Return DocumentClient params as results instead of querying the table.")
+    .option("-t, --table <table>", "Override table defined on Instance.")
     .option("-l, --limit <number>", "Limit the number of results returned.")
     .option(`-f, --filter <expression>`, `Supply a filter expression "<attribute> <operation> <value>". Available attributes include ${attributeNames.join(", ")}.`, getFilterParser(attributeNames), []);
   

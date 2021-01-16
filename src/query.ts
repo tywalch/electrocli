@@ -130,6 +130,9 @@ export async function execute(query: QueryOperation, options: ExecuteQueryOption
 }
 
 export async function query(params: BuildQueryParameters, options: ExecuteQueryOptions, ...args: string[]) {
+  if (options.raw && options.delete) {
+    throw new Error("Sorry but the options '--raw' and '--delete' currently cannot be used together.");
+  }
   let facets = parseFacets(args, params.facets);
   let data: any = await execute(params.query(facets), options);
   if (options.delete && params.actions.remove !== undefined) {

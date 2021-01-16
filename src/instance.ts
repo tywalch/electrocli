@@ -469,7 +469,7 @@ type WhereAttribute = typeof whereAttributeSymbol
 export type AttributeWhere = Record<string, WhereAttribute>
 export type OperationWhere = Record<FilterOperation, (attr: WhereAttribute, value1?: string, value2?: string) => string>
 
-export type QueryConfiguration = {params?: {TableName?: string, Limit?: number}};
+export type QueryConfiguration = {params?: {TableName?: string, Limit?: number}, raw?: boolean};
 
 export type QueryOperation = {
   set?: (facets: object) => QueryOperation;

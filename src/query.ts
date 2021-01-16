@@ -118,6 +118,9 @@ export async function execute(query: QueryOperation, options: ExecuteQueryOption
     config.params = config.params || {};
     config.params.Limit = parseInt(options.limit)
   }
+  if (options.raw) {
+    config.raw = true;
+  }
 
   if (options.params) {
     return console.log(query.params(config));

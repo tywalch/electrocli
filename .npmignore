@@ -1,6 +1,12 @@
 node_modules/
 *.log
 *.tgz
+.idea
+.nyc_output
+.vscode
+
+build.sh
+bump.js
 
 src/
 test/

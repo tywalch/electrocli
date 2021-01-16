@@ -109,3 +109,5 @@ dist/
 *.js
 
 .electro_config
+
+.idea

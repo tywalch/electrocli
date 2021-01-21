@@ -113,7 +113,7 @@ function formatEndpoint(facets: {name: string, type: string}[], ...prefixes: str
   return [endpoint, ...facets.map(facet => `:${facet.name}`)].join("/");
 }
 
-export default function serve(port: number, electroInstances: ElectroInstance[]) {
+export default function serve(port: number, electroInstances: ElectroInstance[], {viewOnly}: {viewOnly: boolean}) {
   if (electroInstances.length === 0) {
     console.log("No services found. Add some with 'electro add <filePath>'.")
   }
@@ -124,11 +124,15 @@ export default function serve(port: number, electroInstances: ElectroInstance[])
 
   for (let service of electroInstances) {
     console.log("");
+    if (viewOnly) {
+      service.eachQuery(queryController);
+    } else {
     service
       .eachQuery(queryController)
       .eachCreate(createController)
       .eachPatch(patchController)
       .eachRemove(deleteController);
+    }
   }
   
   app.use((req, res) => {

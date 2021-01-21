@@ -54,8 +54,9 @@ export default function(program: commander.Command) {
     .command("serve <port>")
     .alias("rest <port>")
     .description("Stand up a local http endpoint based on your imported Instances.")
-    .action((port: number) => {
-      serve(ConfigurationLocation, port);
+    .option("-v, --view-only", "Serve with only get/query operations as endpoints.", false)
+    .action((port: number, {viewOnly}: {viewOnly: boolean}) => {
+      serve(ConfigurationLocation, port, {viewOnly});
     });
 
     let query = createQueryCommand("query", "Execute queries against your imported Instances.", queryCommand);

@@ -160,6 +160,7 @@ $> electro add electrodb/examples/src/taskr.js
 ---
 
 ### Query TaskApp 
+Run queries against your models directly from the command line.
 ```
 $> electro query taskapp
 ```
@@ -191,9 +192,17 @@ Options:
 | assignments | `[options] <employee>` |
 
 ### Serve CRUD HTTP Server for TaskApp
+Stand up an HTTP Server based all of your models.
 ```
 $> electro serve 8080
 ```
+```
+Options:
+  -v, --view-only  Serve with only get/query operations as endpoints. (default: false)
+  -h, --help       display help for command
+```
+> Use the `--view-only` flag to stand up an http server without exposing any put/create/update/patch/delete operations.
+
 |  Method  | Endpoint |
 | -------: | -------- |
 |    GET | `http://localhost:8080/taskapp/employee/:employee` |

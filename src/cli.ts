@@ -30,9 +30,9 @@ export function list(configurationLocation: string): string {
   return config.list();
 }
 
-export function serve(configurationLocation: string, port: number) {
+export function serve(configurationLocation: string, port: number, {viewOnly}: {viewOnly: boolean}) {
   let services = getElectroInstances(configurationLocation);
-  httpServer(port, services);
+  httpServer(port, services, {viewOnly});
 }
 
 export function getElectroInstances(location: string): ElectroInstance[] {

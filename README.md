@@ -6,6 +6,8 @@ Electro is a CLI utility toolbox for extending the functionality of the node lib
 
 # Features 
 - Generate TypeScript definition files (`.d.ts`) for your ElectroDB `Entities` and `Services`
+- Import your models into the cli to run queries and operations directly from your terminal
+- Stand up a web service that dynamically creates endpoints based on your models.
 
 # Install
 Install globally

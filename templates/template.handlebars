@@ -149,11 +149,11 @@ export declare namespace {{pascal name}} {
         lastEvaluatedKeyRaw?: boolean;
     };
     
-    export type GoRecord<T> = (options: GoOptions = {}) => Promise<T>;
+    export type GoRecord<T> = (options?: GoOptions) => Promise<T>;
 
-    export type PageRecord<T> = (page?: {{pascal tableIndexName}} | null, options: GoOptions = {}) => Promise<[{{pascal tableIndexName}}Facets | null, T]>;
+    export type PageRecord<T> = (page?: {{pascal tableIndexName}} | null, options?: GoOptions) => Promise<[{{pascal tableIndexName}}Facets | null, T]>;
 
-    export type ParamRecord = (options: GoOptions = {}) => object;
+    export type ParamRecord = (options?: GoOptions) => object;
 
     export type FilterRecords<T> = (filter: <A extends Attributes>(record: FilterAttributes<A>) => string) => RecordsActionOptions<T>;
 
@@ -325,9 +325,9 @@ export declare namespace {{pascal name}}Collection {
         lastEvaluatedKeyRaw?: boolean;
     };
     
-    type GoRecord<T> = (options: GoOptions = {}) => Promise<T>;
+    type GoRecord<T> = (options?: GoOptions) => Promise<T>;
 
-    type ParamRecord = (options: GoOptions = {}) => object;
+    type ParamRecord = (options?: GoOptions) => object;
 
     type FilterRecords<T> = (filter: <A extends Attributes>(record: FilterAttributes<A>) => string) => RecordsActionOptions<T>;
 

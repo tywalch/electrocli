@@ -3,6 +3,7 @@ import {pascal} from "./handlebars";
 import DynamoDB from "aws-sdk/clients/dynamodb";
 
 const {Entity} = require("electrodb");
+const ElectroLibTypes = require("electrodb/src/types");
 
 const FilterOperations = ["eq","gt","lt","gte","lte","between","begins","exists","notExists","contains","notContains"] as const;
 
@@ -38,7 +39,8 @@ export type ElectroInstanceType = "service" | "entity" | "model";
 export type ElectroInstances = Service | Entity;
 
 export type Entity = {
-  _instance: {description: "entity"}; // really a `symbol` but typescript doesnt understand
+  _instance: symbol;
+  _instanceType?: string;
   _getTableName(): string;
   _setTableName(name: string): void;
   client: DynamoDB.DocumentClient;
@@ -74,7 +76,8 @@ export type Entity = {
 }
 
 export type Service = {
-  _instance: {description: "service"};
+  _instance: symbol;
+  _instanceType?: string;
   _getTableName(): string;
   _setTableName(name: string): void;
   client: DynamoDB.DocumentClient;
@@ -190,9 +193,10 @@ export abstract class Instance {
 export class EntityInstance extends Instance {
   public instance: Entity;
   constructor(name: string, service: string, instance: Entity) {
-    super(name, service, "entity");
-    if (!instance || instance._instance.description !== "entity") {
-      throw new Error("Instance is not of type Service");
+    super(name, service, ElectroLibTypes.ElectroInstanceTypes.entity);
+    // @ts-ignore
+    if (!instance || instance._instance === undefined || instance._instance.description !== ElectroLibTypes.ElectroInstanceTypes.entity || instance._instanceType !== ElectroLibTypes.ElectroInstanceTypes.entity) {
+      throw new Error("Instance is not of type Entity");
     }
     this.instance = instance;
   }
@@ -335,11 +339,32 @@ export class ElectroInstance {
   public actions: Record<string, InstanceActions>
 
   static isEntity(electro: ElectroInstances): electro is Entity {
-    return electro._instance.description === "entity";
+    if (typeof electro._instance !== "symbol") {
+      return false;
+    //  @ts-ignore
+    } else if (electro._instance.description !== undefined) {
+      //  @ts-ignore
+      return electro._instance.description === ElectroLibTypes.ElectroInstanceTypes.entity;
+    } else if (electro._instanceType !== undefined) {
+      return electro._instanceType === ElectroLibTypes.ElectroInstanceTypes.entity;
+    } else {
+      return false;
+    }
   }
 
   static isService(electro: ElectroInstances): electro is Service {
-    return electro._instance.description === "service";
+    if (typeof electro._instance !== "symbol") {
+      return false;
+      //  @ts-ignore
+    } else if (electro._instance.description !== undefined) {
+      //  @ts-ignore
+      return electro._instance.description === ElectroLibTypes.ElectroInstanceTypes.service;
+    } else if (electro._instanceType !== undefined) {
+      return electro._instanceType === ElectroLibTypes.ElectroInstanceTypes.service;
+    } else {
+      return false;
+    }
+    return electro._instance === ElectroLibTypes.ElectroInstance.service;
   }
 
   static parse(electro: ElectroInstances): {name: string, instances: Instance[], queries: QueryRecord, actions: Record<string, {remove?: QueryMethod}>, scans: QueryRecord} {
@@ -389,7 +414,7 @@ export class ElectroInstance {
         queries[collection] = electro.collections[collection];
       }
     } else {
-      throw new Error("File does not export instance of either Entity or Service.");
+      throw new Error("File does not export instance of either Entity or Service. Additionally, make sure are using the latest ElectroDB.");
     }
 
     return {name, instances, queries, actions, scans};
@@ -533,7 +558,8 @@ export class InstanceReader {
         if (table) {
           instance._setTableName(table)
         }
-        return [instance._instance.description, instance];
+        // @ts-ignore
+        return [instance._instance.description || instance._instanceType, instance];
       } else {
         // expecting Entity Model, use constructor to validate entity: constructor will throw in invalid.
         try {

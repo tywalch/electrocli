@@ -195,8 +195,15 @@ export class EntityInstance extends Instance {
   constructor(name: string, service: string, instance: Entity) {
     super(name, service, ElectroLibTypes.ElectroInstanceTypes.entity);
     // @ts-ignore
-    if (!instance || instance._instance === undefined || instance._instance.description !== ElectroLibTypes.ElectroInstanceTypes.entity || instance._instanceType !== ElectroLibTypes.ElectroInstanceTypes.entity) {
-      throw new Error("Instance is not of type Entity");
+    if (!instance || instance._instance === undefined || instance._instance.description !== ElectroLibTypes.ElectroInstanceTypes.entity || (instance._instanceType !== undefined && instance._instanceType !== ElectroLibTypes.ElectroInstanceTypes.entity)) {
+      let message = `Instance is not of type Entity`;
+      if (service) {
+        message = `${service} ${message}`;
+      }
+      if (name) {
+        message = `${name} ${message}`;
+      }
+      throw message;
     }
     this.instance = instance;
   }

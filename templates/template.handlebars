@@ -202,7 +202,7 @@ export declare namespace {{pascal name}} {
         get(key: {{pascal tableIndexName}}Facets): SingleRecordOperationOptions<Item>;
         get(key: {{pascal tableIndexName}}Facets[]): SingleRecordOperationOptions<[Item[], {{pascal tableIndexName}}Facets[]]>;
         delete(key: {{pascal tableIndexName}}Facets): SingleRecordOperationOptions<Item>;
-        delete(key: {{pascal tableIndexName}}Facets[]): SingleRecordOperationOptions<Facets[]>;
+        delete(key: {{pascal tableIndexName}}Facets[]): SingleRecordOperationOptions<{{pascal tableIndexName}}Facets[]>;
         update(key: {{pascal tableIndexName}}Facets): {set: SetRecord<Item>};
         patch(key: {{pascal tableIndexName}}Facets): {set: SetRecord<Item>};
         put(record: Item): SingleRecordOperationOptions<Item>;

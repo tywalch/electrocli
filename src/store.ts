@@ -89,12 +89,38 @@ export class ReferenceConfiguration {
     return serviceName
   }
 
-  list() {
+  private listJson(instance?: string) {
     let services = this.store.get();
-    let table = new Table({head: ["service", "location", "table", "params"]});
-    for (let name of Object.keys(services)) {
-      table.push([name || "", services[name].filePath || "", services[name].table || "", services[name].params || "{}"]);
+    if (instance && instance in services) {
+      return JSON.stringify(services[instance], null, 4);
+    } else {
+      return JSON.stringify(services, null, 4);
+    }
+  }
+
+  private listTable(instance?: string) {
+    let services = this.store.get();
+    let table: Table;
+    if (instance && instance in services) {
+      table = new Table({head: ["service", "location", "table", "params"]});
+      table.push([instance || "", services[instance].filePath || "", services[instance].table || "", services[instance].params || "{}"]);
+    } else {
+      table = new Table({head: ["service", "location", "table"]});
+      for (let name of Object.keys(services)) {
+        table.push([name || "", services[name].filePath || "",  services[name].table || ""]);
+      }
     }
     return table.toString();
+  }
+
+  list(format: string = "table", instance?: string) {
+    switch (format) {
+      case "table":
+        return this.listTable(instance);
+      case "json":
+        return this.listJson(instance);
+      default:
+        return `Unknown format ${format}. Valid formats include 'json', 'table'.`
+    }
   }
 }

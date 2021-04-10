@@ -31,10 +31,10 @@ export function remove(configurationLocation: string, service: string): string {
   return config.remove(service);
 }
 
-export function list(configurationLocation: string): string {
+export function list(configurationLocation: string, format: string, instance?: string): string {
   const store = new ReferenceStore(configurationLocation);
   const config = new ReferenceConfiguration(store);
-  return config.list();
+  return config.list(format, instance);
 }
 
 export function serve(configurationLocation: string, port: number, {viewOnly}: {viewOnly: boolean}) {

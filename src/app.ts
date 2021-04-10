@@ -42,11 +42,12 @@ export default function(program: commander.Command) {
     });
 
   program
-    .command("list")
+    .command("list [instance]")
     .alias("ls")
-    .description("List all ElectroDB Instances that have been imported into the Electro CLI.")
-    .action(() => {
-      let display = list(ConfigurationLocation);
+    .option("-f, --format <type>", "Specify an output type between 'table' or 'json'", "table")
+    .description("List all ElectroDB Instances that have been imported into the Electro CLI. Specify a specific instance for more detail")
+    .action((instance: string, {format}: {format: string}) => {
+      let display = list(ConfigurationLocation, format, instance);
       console.log(display);
     });
 

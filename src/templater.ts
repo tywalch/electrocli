@@ -158,15 +158,4 @@ export default class InstanceTemplater extends ElectroInstance {
     }
     return this.template(templateData, file.read());
   }
-
-  // async write(fileName: string, contents: string): Promise<void> {
-  //   return new Promise((resolve, reject) => {
-  //     fs.writeFile(fileName, contents, {encoding: 'utf8', flag: 'w'}, (err) => {
-  //         if (err) {
-  //           return reject(err);
-  //         }
-  //         resolve();
-  //     });
-  //   });
-  // }
 }

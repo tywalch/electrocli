@@ -153,7 +153,7 @@ export declare namespace {{pascal name}} {
 
     export type PageRecord<T> = (page?: {{pascal tableIndexName}} | null, options?: GoOptions) => Promise<[{{pascal tableIndexName}}Facets | null, T]>;
 
-    export type ParamRecord = (options?: GoOptions) => object;
+    export type ParamRecord<T = object> = (options?: GoOptions) => T;
 
     export type FilterRecords<T> = (filter: <A extends Attributes>(record: FilterAttributes<A>) => string) => RecordsActionOptions<T>;
 
@@ -167,9 +167,9 @@ export declare namespace {{pascal name}} {
         where: WhereRecords<T>;
     }
 
-    export type SingleRecordOperationOptions<T> = {
+    export type SingleRecordOperationOptions<T, P = object> = {
         go: GoRecord<T>;
-        params: ParamRecord;
+        params: ParamRecord<P>;
         where: WhereRecords<T>;
     };
     
@@ -200,13 +200,13 @@ export declare namespace {{pascal name}} {
     
     export class {{pascal name}} {
         get(key: {{pascal tableIndexName}}Facets): SingleRecordOperationOptions<Item>;
-        get(key: {{pascal tableIndexName}}Facets[]): SingleRecordOperationOptions<[Item[], {{pascal tableIndexName}}Facets[]]>;
+        get(key: {{pascal tableIndexName}}Facets[]): SingleRecordOperationOptions<[Item[], {{pascal tableIndexName}}Facets[]], object[]>;
         delete(key: {{pascal tableIndexName}}Facets): SingleRecordOperationOptions<Item>;
-        delete(key: {{pascal tableIndexName}}Facets[]): SingleRecordOperationOptions<{{pascal tableIndexName}}Facets[]>;
+        delete(key: {{pascal tableIndexName}}Facets[]): SingleRecordOperationOptions<{{pascal tableIndexName}}Facets[], object[]>;
         update(key: {{pascal tableIndexName}}Facets): {set: SetRecord<Item>};
         patch(key: {{pascal tableIndexName}}Facets): {set: SetRecord<Item>};
         put(record: Item): SingleRecordOperationOptions<Item>;
-        put(record: Item[]): SingleRecordOperationOptions<Item[]>;
+        put(record: Item[]): SingleRecordOperationOptions<Item[], object[]>;
         create(record: Item): SingleRecordOperationOptions<Item>;
         find(record: Partial<Item>): RecordsActionOptions<Item[]>;
         setIdentifier(type: "model" | "table", value: string): void;

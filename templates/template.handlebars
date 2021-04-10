@@ -206,7 +206,7 @@ export declare namespace {{pascal name}} {
         update(key: {{pascal tableIndexName}}Facets): {set: SetRecord<Item>};
         patch(key: {{pascal tableIndexName}}Facets): {set: SetRecord<Item>};
         put(record: Item): SingleRecordOperationOptions<Item>;
-        put(record: Item[]): SingleRecordOperationOptions<Item>;
+        put(record: Item[]): SingleRecordOperationOptions<Item[]>;
         create(record: Item): SingleRecordOperationOptions<Item>;
         find(record: Partial<Item>): RecordsActionOptions<Item[]>;
         setIdentifier(type: "model" | "table", value: string): void;
@@ -324,6 +324,7 @@ export declare namespace {{pascal name}}Collection {
         includeKeys?: boolean;
         originalErr?: boolean;
         lastEvaluatedKeyRaw?: boolean;
+        table?: string;
     };
     
     type GoRecord<T> = (options?: GoOptions) => Promise<T>;

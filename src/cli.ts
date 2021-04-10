@@ -4,6 +4,13 @@ import {ElectroInstance, InstanceReader} from "./instance";
 import generate from "./generate";
 import httpServer from "./serve";
 
+export type GetInstanceFailure = {
+  name: string;
+  description: string;
+  message: string;
+  error: Error;
+}
+
 export function typeDef(filepath: string, output?: string): string | undefined {
   return generate(filepath, output);
 }
@@ -31,14 +38,15 @@ export function list(configurationLocation: string): string {
 }
 
 export function serve(configurationLocation: string, port: number, {viewOnly}: {viewOnly: boolean}) {
-  let services = getElectroInstances(configurationLocation);
+  let [services] = getElectroInstances(configurationLocation);
   httpServer(port, services, {viewOnly});
 }
 
-export function getElectroInstances(location: string): ElectroInstance[] {
+export function getElectroInstances(location: string): [ElectroInstance[], GetInstanceFailure[]] {
   const store = new ReferenceStore(location);
   let services = store.get();
   let instances: ElectroInstance[] = [];
+  let failures: GetInstanceFailure[] = [];
   for (let name of Object.keys(services)) {
     let reader;
     let instance;
@@ -47,7 +55,12 @@ export function getElectroInstances(location: string): ElectroInstance[] {
       reader = new InstanceReader(services[name].filePath);
       [,instance] = reader.get(options);
     } catch(err) {
-      console.log(colors.red(`Error loading service "${name}": ${err.message} - Remove this entity using 'remove' command or use the 'add' command with the '--overwrite' flag to update the file path.`))
+      failures.push({
+        name: name,
+        description: colors.red("There was an error loading this instance. Run command to learn more about the error."),
+        message: colors.red(`There was an issue while loading the '${name}' (${services[name].filePath}). To resolve the issue, either remove this entity using 'remove' command or use the 'add' command with the '--overwrite' flag to update the file path.`),
+        error: err
+      });
     }
     if (instance === undefined || reader === undefined) {
       continue;
@@ -56,5 +69,5 @@ export function getElectroInstances(location: string): ElectroInstance[] {
     e.setName(name);
     instances.push(e);
   }
-  return instances;
+  return [instances, failures];
 }

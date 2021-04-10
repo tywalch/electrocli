@@ -1,5 +1,5 @@
 import colors from "colors";
-import {typeDef, add, remove, list, serve, getElectroInstances, } from "./cli";
+import {typeDef, add, remove, list, serve, getElectroInstances} from "./cli";
 import {AddReferenceConfiguration} from "./store";
 import {ElectroInstance, Facet} from "./instance";
 import {getFilterParser, ExecuteQueryOptions, BuildQueryParameters, query} from "./query";
@@ -68,10 +68,19 @@ export default function(program: commander.Command) {
 
 export function createQueryCommand(name: string, description: string, serviceCommand: ServiceCommand) {
   let program = new commander.Command(name).description(description);
-  let services = getElectroInstances(ConfigurationLocation);
+  let [services, failures] = getElectroInstances(ConfigurationLocation);
   for (let service of services) {
     let command = new commander.Command(service.name.toLowerCase());
     serviceCommand(command, service);
+    program.addCommand(command);
+  }
+  for (let failure of failures) {
+    let command = new commander.Command(failure.name);
+    command.description(failure.description);
+    command.action(() => {
+      console.log(failure.message);
+      console.log(failure.error);
+    });
     program.addCommand(command);
   }
   return program;
@@ -164,5 +173,6 @@ function executeQuery(program: commander.Command, params: BuildQueryParameters):
       console.log(colors.red(err.message))
     }
   });
+
   return program;
 }

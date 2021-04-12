@@ -147,13 +147,21 @@ export declare namespace {{pascal name}} {
         includeKeys?: boolean;
         originalErr?: boolean;
         lastEvaluatedKeyRaw?: boolean;
+        table?: string;
     };
+
+    export type ParamOptions = {
+        params?: object;
+        table?: string;
+    }
+
+    export type BatchGoOptions = GoOptions & {concurrent?: number};
     
-    export type GoRecord<T> = (options?: GoOptions) => Promise<T>;
+    export type GoRecord<T, O extends GoOptions = GoOptions> = (options?: O) => Promise<T>;
 
     export type PageRecord<T> = (page?: {{pascal tableIndexName}} | null, options?: GoOptions) => Promise<[{{pascal tableIndexName}}Facets | null, T]>;
 
-    export type ParamRecord<T = object> = (options?: GoOptions) => T;
+    export type ParamRecord<T = object> = (options?: ParamOptions) => T;
 
     export type FilterRecords<T> = (filter: <A extends Attributes>(record: FilterAttributes<A>) => string) => RecordsActionOptions<T>;
 
@@ -165,6 +173,11 @@ export declare namespace {{pascal name}} {
         page: PageRecord<T>;
         filter: FilterRecords<T>;
         where: WhereRecords<T>;
+    }
+
+    export type BatchRecordOptions<T> = {
+        go: GoRecord<T, BatchGoOptions>;
+        params: ParamRecord<object[]>;
     }
 
     export type SingleRecordOperationOptions<T, P = object> = {
@@ -200,13 +213,13 @@ export declare namespace {{pascal name}} {
     
     export class {{pascal name}} {
         get(key: {{pascal tableIndexName}}Facets): SingleRecordOperationOptions<Item>;
-        get(key: {{pascal tableIndexName}}Facets[]): SingleRecordOperationOptions<[Item[], {{pascal tableIndexName}}Facets[]], object[]>;
+        get(key: {{pascal tableIndexName}}Facets[]): BatchRecordOptions<[Item[], {{pascal tableIndexName}}Facets[]]>;
         delete(key: {{pascal tableIndexName}}Facets): SingleRecordOperationOptions<Item>;
-        delete(key: {{pascal tableIndexName}}Facets[]): SingleRecordOperationOptions<{{pascal tableIndexName}}Facets[], object[]>;
+        delete(key: {{pascal tableIndexName}}Facets[]): BatchRecordOptions<{{pascal tableIndexName}}Facets[]>;
         update(key: {{pascal tableIndexName}}Facets): {set: SetRecord<Item>};
         patch(key: {{pascal tableIndexName}}Facets): {set: SetRecord<Item>};
         put(record: Item): SingleRecordOperationOptions<Item>;
-        put(record: Item[]): SingleRecordOperationOptions<Item[], object[]>;
+        put(record: Item[]): BatchRecordOptions<Item[]>;
         create(record: Item): SingleRecordOperationOptions<Item>;
         find(record: Partial<Item>): RecordsActionOptions<Item[]>;
         setIdentifier(type: "model" | "table", value: string): void;
@@ -326,10 +339,15 @@ export declare namespace {{pascal name}}Collection {
         lastEvaluatedKeyRaw?: boolean;
         table?: string;
     };
-    
-    type GoRecord<T> = (options?: GoOptions) => Promise<T>;
 
-    type ParamRecord = (options?: GoOptions) => object;
+    export type ParamOptions = {
+        params?: object;
+        table?: string;
+    }
+    
+    type GoRecord<T, O extends GoOptions = GoOptions> = (options?: O) => Promise<T>;
+
+    type ParamRecord = (options?: ParamOptions) => object;
 
     type FilterRecords<T> = (filter: <A extends Attributes>(record: FilterAttributes<A>) => string) => RecordsActionOptions<T>;
 

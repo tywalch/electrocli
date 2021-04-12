@@ -41,7 +41,7 @@
     "cli-table": "0.3.1",
     "colors": "1.4.0",
     "commander": "6.1.0",
-    "electrodb": "^0.9.49",
+    "electrodb": "^0.9.50",
     "express": "4.17.1",
     "handlebars": "4.7.6",
     "ts-node": "^9.0.0",

@@ -120,6 +120,7 @@ Commands:
 TaskApp is a simple three Entity service that tracks Organizations, Employees, and Tasks. 
 
 ### Setup
+The following examples use models and code within the ElectroDB repository for examples: [electrodb](https://github.com/tywalch/electrodb/tree/master/examples/taskapp). Follow the steps below to get setup or follow along. 
 
 #### Install ElectroCLI Globally
 Install `electrocli` via npm globally. Note: This may require `sudo` or administrator privileges.
@@ -172,7 +173,7 @@ Options:
   -p, --params               Return DocumentClient params as results instead of querying the table.
   -t, --table <table>        Override table defined on Instance.
   -l, --limit <number>       Limit the number of results returned.
-  -f, --filter <expression>  Supply a filter expression "<attribute> <operation> <value>". Available attributes include employee, firstName, lastName, office, title, team, salary, manager, dateHired, birthday. (default: [])
+  -f, --filter <expression>  Supply a filter expression "<attribute>, <operation>, [value1] [value2]". Use double commas to escape a comma. Available attributes include employee, firstName, lastName, office, title, team, salary, manager, dateHired, birthday. (default: [])
   -d, --delete               Delete items returned from query.
   -h, --help                 display help for command
 ```

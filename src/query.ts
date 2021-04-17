@@ -1,5 +1,4 @@
-import { QueryOperation } from "./instance";
-import {QueryMethod, Attribute, Facet, QueryConfiguration} from "./instance";
+import {QueryOperation, QueryMethod, Attribute, AttributeType, Facet, QueryConfiguration} from "./instance";
 
 const FILTER_OPERATIONS = ["eq","gt","lt","gte","lte","between","begins","exists","notExists","contains","notContains"] as const;
 
@@ -19,31 +18,78 @@ type FilterOperation = (typeof FILTER_OPERATIONS)[number];
 export type FilterOption = {
   attribute: string;
   operation: FilterOperation
-  value1: string;
-  value2?: string;
+  value1: string|number|boolean;
+  value2?: string|number|boolean;
 }
 
 export type RequestFilters = string | string[];
 
-export function getFilterParser(attributes: string[]) {
+function trimValue<T extends (string | undefined)>(value?: T): T {
+  if (typeof value === "string") {
+    return value.trim() as T;
+  }
+  return value as T;
+}
+
+function castValue(type: AttributeType, value: string) {
+  switch (type) {
+    case "number":
+      return parseInt(value);
+    case "boolean":
+      return value === "true" || !(value === "false");
+    default:
+      return value;
+  }
+}
+
+export function parseFilterParameterString(value: string) {
+  let parts: string[] = [""];
+  let j = 0;
+  for (let i = 0; i < value.length; i++) {
+    let char = value[i];
+    if (char === "," && value[i+1] === ",") {
+      parts[j] += char;
+      i++;
+    } else if (char === ",") {
+      j++;
+      parts[j] = "";
+    } else {
+      parts[j] += char;
+    }
+  }
+  if (parts.length < 2 || parts.length > 4) {
+    throw new Error(`Invalid filter string '${value}'. Where expressions must be in the format of '<attribute>,<operation>,[value1],[value2]'`)
+  }
+  return parts.map(parts => trimValue(parts));
+}
+
+export function getFilterParser(attributes: Attribute[]) {
+  let attributeNames = attributes.map(attribute => attribute.name)
   return (val: string, arr: FilterOption[] = []): FilterOption[] => {
-    let [name = "", operation, value1 = "", value2] = val.split(" ");
-    let attribute = attributes.find(attribute => attribute.toLowerCase() === name.toLowerCase());
-    if (name === undefined || operation === undefined || value1 === undefined) {
-      throw new Error(`Where expressions must be in the format of "<attribute> <operation> <value1> [value2]"`);
+    let [name = "", operation, value1 = "", value2] = parseFilterParameterString(val);
+    let attribute = attributes.find(attribute => attribute.name.toLowerCase() === name.toLowerCase());
+    if (name === undefined || operation === undefined) {
+      throw new Error(`Where expressions must be in the format of "<attribute>,<operation>,[value1],[value2]"`);
     }
     if (!attribute) {
-      throw new Error(`Where attribute ${name} is not a valid attribute. Valid attributes include ${attributes.join(", ")}.`);
+      throw new Error(`Where attribute ${name} is not a valid attribute. Valid attributes include ${attributeNames.join(", ")}.`);
     }
     if (!isOperation(operation)) {
       throw new Error(`Where operation ${operation} is not a valid attribute. Valid attributes include ${FILTER_OPERATIONS.join(", ")}.`);
     }
-    arr.push({attribute, operation, value1, value2});
+    let castedValue1 = castValue(attribute.type, value1);
+    let castedValue2 = castValue(attribute.type, value2);
+    arr.push({
+      operation,
+      attribute: attribute.name,
+      value1: castedValue1,
+      value2: castedValue2
+    });
     return arr;
   }
 }
 
-export function parseFilters(attributes: string[], filters: RequestFilters) {
+export function parseFilters(attributes: Attribute[], filters: RequestFilters) {
   let parser = getFilterParser(attributes);
   if (typeof filters === "string") {
     return parser(filters);
@@ -83,8 +129,6 @@ async function removeRecords(data: object[], remove: QueryMethod, options: Execu
         return [err.message, result];
       })
   }));
-  // let errors = Array.from(new Set(results.map(([err]) => err))).filter(Boolean);
-  // let success = [];
   let failure = [];
   for (let [err, result] of results) {
     if (err) {

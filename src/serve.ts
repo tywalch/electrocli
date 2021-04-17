@@ -10,7 +10,7 @@ function queryController(name: string, accessPattern: string, entity: Instance, 
   let index = entity.getIndexName(accessPattern);
   let facets: Facet[] = entity.getFacets(index);
   let facetDetail = facets.map(facet => ({key: facet.type, name: facet.name, type: facet.type}));
-  let attributes = Object.keys(entity.getAttributes());
+  let attributes = Object.values(entity.getAttributes());
   for (let permutation of getFacetPermutations(facetDetail)) {
     let endpoint = formatEndpoint(permutation, name, accessPattern)
     console.log("   GET", endpoint);
@@ -38,7 +38,7 @@ function queryController(name: string, accessPattern: string, entity: Instance, 
 
 function patchController(name: string, accessPattern: string, entity: Instance, patch: QueryMethod) {
   let facets = entity.getFacets() || [];
-  let attributes = Object.keys(entity.getAttributes());
+  let attributes = Object.values(entity.getAttributes());
   let endpoint = formatEndpoint(facets, name, accessPattern);
   console.log("   PUT", endpoint);
   app.put(endpoint, async (req, res) => {
@@ -64,7 +64,7 @@ function patchController(name: string, accessPattern: string, entity: Instance, 
 }
 
 function createController(name: string, accessPattern: string, entity: Instance, create: QueryMethod) {
-  let attributes = Object.keys(entity.getAttributes());
+  let attributes = Object.values(entity.getAttributes());
   let endpoint = formatEndpoint([], name, accessPattern);
   console.log("  POST", endpoint);
   app.post(endpoint, async (req, res) => {
@@ -85,7 +85,7 @@ function createController(name: string, accessPattern: string, entity: Instance,
 
 function deleteController(name: string, accessPattern: string, entity: Instance, remove: QueryMethod) {
   let facets = entity.getFacets() || [];
-  let attributes = Object.keys(entity.getAttributes());
+  let attributes = Object.values(entity.getAttributes());
   let endpoint = formatEndpoint(facets, name, accessPattern);
   console.log("DELETE", endpoint);
   app.delete(endpoint, async (req, res) => {

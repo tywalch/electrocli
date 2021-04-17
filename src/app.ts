@@ -156,7 +156,7 @@ function executeQuery(program: commander.Command, params: BuildQueryParameters):
     .option("-p, --params", "Return DocumentClient params as results instead of querying the table.")
     .option("-t, --table <table>", "Override table defined on Instance.")
     .option("-l, --limit <number>", "Limit the number of results returned.")
-    .option(`-f, --filter <expression>`, `Supply a filter expression "<attribute> <operation> <value>". Available attributes include ${attributeNames.join(", ")}.`, getFilterParser(attributeNames), []);
+    .option(`-f, --filter <expression>`, `Supply a comma separated filter expression "<attribute>,<operation>,[value1],[value2]". Use double commas to escape a comma. Available attributes include ${attributeNames.join(", ")}.`, getFilterParser(params.attributes), []);
   
   if (shouldRemove) {
     program = program.option("-d, --delete", "Delete items returned from query.");

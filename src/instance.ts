@@ -9,8 +9,10 @@ const FilterOperations = ["eq","gt","lt","gte","lte","between","begins","exists"
 
 export type IndexTypes = 'pk' | 'sk';
 
+export type AttributeType = 'string' | 'number' | 'boolean' | 'any' | 'enum';
+
 export type Attribute = {
-  type: 'string' | 'number' | 'boolean' | 'any' | 'enum';
+  type: AttributeType;
   name: string;
   required: boolean;
   readOnly: boolean;
@@ -499,7 +501,7 @@ type AttributeFilter = Record<string, AttributeFilterOperation>
 const whereAttributeSymbol: unique symbol = Symbol("where");
 type WhereAttribute = typeof whereAttributeSymbol
 export type AttributeWhere = Record<string, WhereAttribute>
-export type OperationWhere = Record<FilterOperation, (attr: WhereAttribute, value1?: string, value2?: string) => string>
+export type OperationWhere = Record<FilterOperation, (attr: WhereAttribute, value1?: string|number|boolean, value2?: string|number|boolean) => string>
 
 export type QueryConfiguration = {params?: {TableName?: string, Limit?: number}, raw?: boolean};
 

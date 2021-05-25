@@ -345,7 +345,8 @@ export class ElectroInstance {
   public electro: ElectroInstances;
   public queries: QueryRecord;
   public scans: QueryRecord;
-  public actions: Record<string, InstanceActions>
+  public actions: Record<string, InstanceActions>;
+  public type: ElectroInstanceType;
 
   static isEntity(electro: ElectroInstances): electro is Entity {
     if (typeof electro._instance !== "symbol") {
@@ -439,10 +440,7 @@ export class ElectroInstance {
     this.service = instances[0].service;
     this.actions = actions;
     this.isService = ElectroInstance.isService(electro);
-  }
-
-  getTableName() {
-    
+    this.type = this.isService ? "service" : "entity";
   }
 
   setName(name: string) {
@@ -503,7 +501,7 @@ type WhereAttribute = typeof whereAttributeSymbol
 export type AttributeWhere = Record<string, WhereAttribute>
 export type OperationWhere = Record<FilterOperation, (attr: WhereAttribute, value1?: string|number|boolean, value2?: string|number|boolean) => string>
 
-export type QueryConfiguration = {params?: {TableName?: string, Limit?: number}, raw?: boolean};
+export type QueryConfiguration = {params?: {TableName?: string, Limit?: number}, raw?: boolean, table?: string};
 
 export type QueryOperation = {
   set?: (facets: object) => QueryOperation;

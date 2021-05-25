@@ -156,7 +156,7 @@ export async function execute(query: QueryOperation, options: ExecuteQueryOption
   let config: QueryConfiguration = {};
   if (options.table) {
     config.params = config.params || {};
-    config.params.TableName = options.table;
+    config.table = options.table;
   }
   if (options.limit) {
     config.params = config.params || {};

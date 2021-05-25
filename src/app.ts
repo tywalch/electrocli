@@ -71,9 +71,13 @@ export function createQueryCommand(name: string, description: string, serviceCom
   let program = new commander.Command(name).description(description);
   let [services, failures] = getElectroInstances(ConfigurationLocation);
   for (let service of services) {
-    let command = new commander.Command(service.name.toLowerCase());
-    serviceCommand(command, service);
-    program.addCommand(command);
+    if (service.type === "entity" || service.type === "model") {
+      serviceCommand(program, service);
+    } else {
+      let command = new commander.Command(service.name.toLowerCase());
+      serviceCommand(command, service);
+      program.addCommand(command);
+    }
   }
   for (let failure of failures) {
     let command = new commander.Command(failure.name);
@@ -127,7 +131,7 @@ function scanCommand(program: commander.Command, service: ElectroInstance): void
   for (let entity in service.scans) {
     let instance = service.instances.find(instance => instance.name === entity);
     if (instance && instance.type === "entity") {
-      let command = program.command(entity.toLowerCase()).description(`Perform scan on ${entity} entities.`);
+      let command = program.command(entity.toLowerCase()).description(`Perform scan on ${entity} entity.`);
       executeQuery(command, {
         name: entity.toLowerCase(),
         query: service.scans[entity],
@@ -154,7 +158,7 @@ function executeQuery(program: commander.Command, params: BuildQueryParameters):
   program
     .option("-r, --raw", "Return raw field response.")
     .option("-p, --params", "Return DocumentClient params as results instead of querying the table.")
-    .option("-t, --table <table>", "Override table defined on Instance.")
+    .option("-t, --table <table>", "Override table defined on Instance.")
     .option("-l, --limit <number>", "Limit the number of results returned.")
     .option(`-f, --filter <expression>`, `Supply a comma separated filter expression "<attribute>,<operation>,[value1],[value2]". Use double commas to escape a comma. Available attributes include ${attributeNames.join(", ")}.`, getFilterParser(params.attributes), []);
   

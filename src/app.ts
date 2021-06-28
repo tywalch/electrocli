@@ -13,7 +13,7 @@ const ConfigurationLocation = `${os.homedir()}/.electro_config`;
 export default function(program: commander.Command) {
   program
     .command("typedef <filepath>")
-    .description("Specify a file that exports an ElectroDB Service or Entity and Electro CLI will automatically generate a typescript type definition file.")
+    .description("[Deprecated]: Specify a file that exports an ElectroDB Service or Entity and Electro CLI will automatically generate a typescript type definition file.")
     .option("-o, --output <filepath>", "Specify an output filepath for the generated type definition file.")
     .action((filepath: string, {output}: {output?: string} = {}) => {
       let display = typeDef(filepath, output);

@@ -5,7 +5,6 @@ Electro is a CLI utility toolbox for extending the functionality of the node lib
 *This app is a work in progress, please submit issues/feedback or reach out on twitter [@tinkertamper](https://twitter.com/tinkertamper)*. 
 
 # Features 
-- Generate TypeScript definition files (`.d.ts`) for your ElectroDB `Entities` and `Services`
 - Import your models into the cli to run queries and operations directly from your terminal
 - Stand up a web service that dynamically creates endpoints based on your models.
 
@@ -26,7 +25,7 @@ Options:
   -h, --help                    display help for command
 
 Commands:
-  typedef [options] <filepath>  Specify a file that exports an ElectroDB Service or Entity and Electro CLI will automatically generate a typescript type definition file.
+  typedef [options] <filepath>  [Deprecated]: Specify a file that exports an ElectroDB Service or Entity and Electro CLI will automatically generate a typescript type definition file.
   add [options] <filepath>      Specify a file that exports an ElectroDB Service, Entity, or JSON Model. Electro will add that Instance to the CLI allowing it to be queried.
   remove|rm <service>           Remove existing ElectroDB Instance from the Electro CLI.
   list|ls                       List all ElectroDB Instances that have been imported into the Electro CLI.
@@ -41,7 +40,7 @@ Commands:
 ```
 Usage:  typedef [options] <filepath>
 
-Specify a file that exports an ElectroDB Service or Entity and Electro CLI will automatically generate a typescript type definition file.
+[Deprecated]: Specify a file that exports an ElectroDB Service or Entity and Electro CLI will automatically generate a typescript type definition file.
 
 Options:
   -o, --output <filepath>  Specify an output filepath for the generated type definition file.

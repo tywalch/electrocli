@@ -1,6 +1,6 @@
 {
   "name": "electrocli",
-  "version": "0.5.1",
+  "version": "1.0.0",
   "description": "Electro is a CLI utility toolbox for extending the functionality of the node library ElectroDB to the terminal.",
   "main": "dist/bin/index.js",
   "types": "dist/bin/index.d.ts",
@@ -41,7 +41,7 @@
     "cli-table": "0.3.1",
     "colors": "1.4.0",
     "commander": "6.1.0",
-    "electrodb": "^0.10.2",
+    "electrodb": "^1.0.0",
     "express": "4.17.1",
     "handlebars": "4.7.6",
     "ts-node": "^9.0.0",
